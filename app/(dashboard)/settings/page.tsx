@@ -264,7 +264,7 @@ export default function SettingsPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={qrDataUrl} alt="WhatsApp QR Code" width={240} height={240} />
                       </Box>
-                      <Typography variant="caption" color="text.secondary" textAlign="center">
+                      <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
                         Open WhatsApp → tap <strong>⋮ Menu</strong> → <strong>Linked Devices</strong> → <strong>Link a Device</strong> → scan this QR
                       </Typography>
                       <Button
