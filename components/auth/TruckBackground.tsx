@@ -6,7 +6,7 @@ export default function TruckBackground() {
   return (
     <Box
       component="img"
-      src="/truck-bg.jpg"
+      src="/images/left-img.jpg"
       alt=""
       aria-hidden="true"
       sx={{

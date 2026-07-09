@@ -6,8 +6,13 @@ import AuthProvider   from '../providers/AuthProvider';
 import { ToastProvider } from '../providers/ToastProvider';
 
 export const metadata: Metadata = {
-  title: 'A2 Insurance | Vehicle Insurance Management',
-  description: 'Modern vehicle insurance management platform.',
+  title: 'A2 Insurance | Insurance Management',
+  description: 'Modern insurance management platform.',
+  icons: {
+    icon:             '/images/icon.png',
+    shortcut:         '/images/icon.png',
+    apple:            '/images/icon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

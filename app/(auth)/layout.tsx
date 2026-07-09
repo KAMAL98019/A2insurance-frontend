@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
-import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import TruckBackground from '../../components/auth/TruckBackground';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -24,11 +23,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <TruckBackground />
 
         {/* Logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, zIndex: 1 }}>
-          <DirectionsBusIcon sx={{ fontSize: 32 }} />
-          <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: 0.5 }}>
-            A2 Insurance
-          </Typography>
+        <Box sx={{ zIndex: 1, display: 'flex', justifyContent: 'center' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/companylogo.png" alt="A2 Insurance" style={{ height: 90, width: 'auto', display: 'block', objectFit: 'contain' }} />
         </Box>
 
         {/* Hero text */}
@@ -103,15 +100,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               color: '#fff',
             }}
           >
-            <DirectionsBusIcon sx={{ fontSize: 26 }} />
-            <Box>
-              <Typography sx={{ fontWeight: 700, fontSize: '1rem', lineHeight: 1.1 }}>
-                A2 Insurance
-              </Typography>
-              <Typography sx={{ fontSize: '0.6rem', opacity: 0.65, letterSpacing: 1.2 }}>
-                MANAGEMENT
-              </Typography>
-            </Box>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/companylogo.png" alt="A2 Insurance" style={{ height: 40, width: 'auto', display: 'block', objectFit: 'contain' }} />
           </Box>
 
           {/* Form */}

@@ -90,7 +90,7 @@ export default function RegisterForm() {
         label="Phone number"
         type="tel"
         autoComplete="tel"
-        placeholder="+1 555 000 0000"
+        placeholder="+91 9876543210"
         error={!!errors.phoneNumber}
         helperText={errors.phoneNumber?.message}
         slotProps={{ inputLabel: { shrink: true } }}

@@ -6,8 +6,8 @@ export const categoriesApi = {
   getAll: () =>
     apiClient.get<ApiResponse<VehicleCategory[]>>('/categories').then((r) => r.data.data),
 
-  create: (name: string) =>
-    apiClient.post<ApiResponse<VehicleCategory>>('/categories', { name }).then((r) => r.data.data),
+  create: (name: string, parentId?: number) =>
+    apiClient.post<ApiResponse<VehicleCategory>>('/categories', { name, parentId }).then((r) => r.data.data),
 
   update: (id: number, name: string) =>
     apiClient.put<ApiResponse<VehicleCategory>>(`/categories/${id}`, { name }).then((r) => r.data.data),

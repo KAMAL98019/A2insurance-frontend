@@ -57,7 +57,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         </IconButton>
 
         <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600, color: 'text.primary' }}>
-          A2 Insurance
+          A2 Insurance Care
         </Typography>
 
         {user?.role === 'ADMIN' && (

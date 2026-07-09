@@ -5,16 +5,16 @@ import {
   Box, Paper, Typography, IconButton, Chip, Button, Skeleton,
   Dialog, DialogTitle, DialogContent, DialogActions, useTheme, useMediaQuery,
 } from '@mui/material';
-import ChevronLeftIcon  from '@mui/icons-material/ChevronLeft';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import TodayIcon        from '@mui/icons-material/Today';
+import TodayIcon from '@mui/icons-material/Today';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import NextLink         from 'next/link';
+import NextLink from 'next/link';
 import dayjs, { Dayjs } from 'dayjs';
 import type { VehicleRecord } from '../../types/vehicle-record.types';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DOW    = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function buildGrid(year: number, month: number): (Dayjs | null)[][] {
   const first = dayjs(new Date(year, month, 1));
@@ -29,8 +29,8 @@ function buildGrid(year: number, month: number): (Dayjs | null)[][] {
 
 function chipColor(dateStr: string, now: Dayjs): 'error' | 'warning' | 'info' | 'success' {
   const diff = dayjs(dateStr).diff(now, 'day');
-  if (diff < 0)   return 'error';
-  if (diff <= 7)  return 'warning';
+  if (diff < 0) return 'error';
+  if (diff <= 7) return 'warning';
   if (diff <= 30) return 'info';
   return 'success';
 }
@@ -41,10 +41,10 @@ export default function VehicleCalendarView({ records }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   // All date state starts null on server — set after client mount to avoid hydration mismatch
-  const [now,      setNow]      = useState<Dayjs | null>(null);
-  const [month,    setMonth]    = useState<Dayjs | null>(null);
+  const [now, setNow] = useState<Dayjs | null>(null);
+  const [month, setMonth] = useState<Dayjs | null>(null);
   const [selected, setSelected] = useState<Dayjs | null>(null);
-  const [picking,  setPicking]  = useState(false);
+  const [picking, setPicking] = useState(false);
   const [pickYear, setPickYear] = useState<number>(0);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function VehicleCalendarView({ records }: Props) {
     return acc;
   }, {});
 
-  const selKey     = selected?.format('YYYY-MM-DD') ?? '';
+  const selKey = selected?.format('YYYY-MM-DD') ?? '';
   const selRecords = selKey ? (byDate[selKey] ?? []) : [];
 
   return (
@@ -115,7 +115,7 @@ export default function VehicleCalendarView({ records }: Props) {
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.75 }}>
               {MONTHS.map((name, idx) => {
                 const isActive = month.year() === pickYear && month.month() === idx;
-                const isNow    = now.year() === pickYear && now.month() === idx;
+                const isNow = now.year() === pickYear && now.month() === idx;
                 return (
                   <Box
                     key={name}
@@ -142,9 +142,9 @@ export default function VehicleCalendarView({ records }: Props) {
         {/* Legend */}
         <Box sx={{ display: 'flex', gap: 1, px: 2, py: 1, flexWrap: 'wrap', borderBottom: '1px solid', borderColor: 'divider' }}>
           {[
-            { color: 'error' as const,   label: 'Expired' },
+            { color: 'error' as const, label: 'Expired' },
             { color: 'warning' as const, label: 'Expiring ≤ 7 days' },
-            { color: 'info' as const,    label: 'Expiring ≤ 30 days' },
+            { color: 'info' as const, label: 'Expiring ≤ 30 days' },
             { color: 'success' as const, label: 'Active' },
           ].map(({ color, label }) => (
             <Chip key={color} label={label} size="small" color={color} variant="outlined" sx={{ fontSize: '0.7rem' }} />
@@ -177,9 +177,9 @@ export default function VehicleCalendarView({ records }: Props) {
                   />
                 );
               }
-              const key        = day.format('YYYY-MM-DD');
-              const dayRecs    = byDate[key] ?? [];
-              const isToday    = day.isSame(now, 'day');
+              const key = day.format('YYYY-MM-DD');
+              const dayRecs = byDate[key] ?? [];
+              const isToday = day.isSame(now, 'day');
               const isSelected = selected && day.isSame(selected, 'day');
 
               return (

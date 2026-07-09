@@ -20,6 +20,8 @@ export interface EmbeddedRenewal {
 export interface VehicleCategory {
   id: number;
   name: string;
+  parentId: number | null;
+  children?: VehicleCategory[];
   createdAt: string;
   updatedAt: string;
 }
@@ -74,6 +76,14 @@ export interface ExpiryAlert {
   daysUntilExpiry: number;
 }
 
+interface ModuleStats {
+  total: number;
+  active: number;
+  expired: number;
+  pendingRenewal: number;
+  upcomingIn30: number;
+}
+
 export interface DashboardStats {
   total: number;
   expiringIn7Days: number;
@@ -88,4 +98,7 @@ export interface DashboardStats {
   };
   expiryAlerts: ExpiryAlert[];
   categoryBreakdown: { category: string; count: number }[];
+  healthInsurance: ModuleStats;
+  fireInsurance: ModuleStats;
+  labourInsurance: ModuleStats;
 }

@@ -2,27 +2,35 @@
 
 import {
   Box, Drawer, List, ListItem, ListItemButton,
-  ListItemIcon, ListItemText, Typography, Divider, Collapse,
+  ListItemIcon, ListItemText, Divider, Collapse,
 } from '@mui/material';
 import DashboardIcon      from '@mui/icons-material/Dashboard';
 import DirectionsCarIcon  from '@mui/icons-material/DirectionsCar';
 import SettingsIcon       from '@mui/icons-material/Settings';
 import ExpandLessIcon     from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon     from '@mui/icons-material/ExpandMore';
-import DirectionsBusIcon  from '@mui/icons-material/DirectionsBus';
 import PlaylistAddIcon    from '@mui/icons-material/PlaylistAdd';
 import WarningAmberIcon   from '@mui/icons-material/WarningAmber';
 import EventBusyIcon      from '@mui/icons-material/EventBusy';
 import HistoryIcon        from '@mui/icons-material/History';
+import TrackChangesIcon   from '@mui/icons-material/TrackChanges';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import CategoryIcon       from '@mui/icons-material/Category';
+import FavoriteIcon       from '@mui/icons-material/Favorite';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import EngineeringIcon    from '@mui/icons-material/Engineering';
+import FireplaceIcon      from '@mui/icons-material/Fireplace';
+import GroupsIcon         from '@mui/icons-material/Groups';
+import BarChartIcon       from '@mui/icons-material/BarChart';
+import TuneIcon           from '@mui/icons-material/Tune';
 import { usePathname } from 'next/navigation';
 import NextLink from 'next/link';
 import { useState } from 'react';
 
 export const SIDEBAR_WIDTH = 256;
 
-interface NavChild { label: string; href: string; icon: React.ReactNode }
+interface NavChild { label: string; href: string; icon: React.ReactNode; hidden?: boolean }
 interface NavItem {
   label: string;
   href?: string;
@@ -38,9 +46,55 @@ const NAV: NavItem[] = [
     children: [
       { label: 'Vehicle List',      href: '/vehicle-records',                 icon: <DirectionsCarIcon fontSize="small" /> },
       { label: 'Add Vehicle',       href: '/vehicle-records/add',             icon: <PlaylistAddIcon fontSize="small" /> },
-      { label: 'Expiring Policies', href: '/vehicle-records/expiring',        icon: <WarningAmberIcon fontSize="small" /> },
-      { label: 'Expired Policies',  href: '/vehicle-records/expired',         icon: <EventBusyIcon fontSize="small" /> },
-      { label: 'Renewal History',   href: '/vehicle-records/renewal-history', icon: <HistoryIcon fontSize="small" /> },
+      { label: 'Expiring Policies', href: '/vehicle-records/expiring',        icon: <WarningAmberIcon fontSize="small" />, hidden: true },
+      { label: 'Expired Policies',  href: '/vehicle-records/expired',         icon: <EventBusyIcon fontSize="small" />,   hidden: true },
+      { label: 'Renewal History',   href: '/vehicle-records/renewal-history', icon: <HistoryIcon fontSize="small" />,     hidden: true },
+    ],
+  },
+  {
+    label: 'Health Insurance',
+    icon: <FavoriteIcon />,
+    children: [
+      { label: 'Health Records',      href: '/health-records',                  icon: <MedicalServicesIcon fontSize="small" /> },
+      { label: 'Add Health Policy',   href: '/health-records/add',              icon: <PlaylistAddIcon fontSize="small" /> },
+      { label: 'Expiring Policies',   href: '/health-records/expiring',         icon: <WarningAmberIcon fontSize="small" />,  hidden: true },
+      { label: 'Expired Policies',    href: '/health-records/expired',          icon: <EventBusyIcon fontSize="small" />,     hidden: true },
+      { label: 'Track Renewals',      href: '/health-records/track',            icon: <TrackChangesIcon fontSize="small" />,  hidden: true },
+      { label: 'Renewal History',     href: '/health-records/renewal-history',  icon: <HistoryIcon fontSize="small" />,       hidden: true },
+    ],
+  },
+  {
+    label: 'Fire Insurance',
+    icon: <LocalFireDepartmentIcon />,
+    children: [
+      { label: 'Fire Records',      href: '/fire-records',                 icon: <FireplaceIcon fontSize="small" /> },
+      { label: 'Add Fire Policy',   href: '/fire-records/add',             icon: <PlaylistAddIcon fontSize="small" /> },
+      { label: 'Expiring Policies', href: '/fire-records/expiring',        icon: <WarningAmberIcon fontSize="small" />, hidden: true },
+      { label: 'Expired Policies',  href: '/fire-records/expired',         icon: <EventBusyIcon fontSize="small" />,   hidden: true },
+      { label: 'Track Renewals',    href: '/fire-records/track',           icon: <TrackChangesIcon fontSize="small" />, hidden: true },
+      { label: 'Renewal History',   href: '/fire-records/renewal-history', icon: <HistoryIcon fontSize="small" />,     hidden: true },
+    ],
+  },
+  {
+    label: 'Labour Insurance',
+    icon: <EngineeringIcon />,
+    children: [
+      { label: 'Labour Records',    href: '/labour-records',                 icon: <GroupsIcon fontSize="small" /> },
+      { label: 'Add Labour Policy', href: '/labour-records/add',             icon: <PlaylistAddIcon fontSize="small" /> },
+      { label: 'Expiring Policies', href: '/labour-records/expiring',        icon: <WarningAmberIcon fontSize="small" />, hidden: true },
+      { label: 'Expired Policies',  href: '/labour-records/expired',         icon: <EventBusyIcon fontSize="small" />,   hidden: true },
+      { label: 'Track Renewals',    href: '/labour-records/track',           icon: <TrackChangesIcon fontSize="small" />, hidden: true },
+      { label: 'Renewal History',   href: '/labour-records/renewal-history', icon: <HistoryIcon fontSize="small" />,     hidden: true },
+    ],
+  },
+  {
+    label: 'Analytics',
+    icon: <BarChartIcon />,
+    children: [
+      { label: 'Vehicle Analytics', href: '/analytics/vehicle', icon: <DirectionsCarIcon fontSize="small" /> },
+      { label: 'Health Analytics',  href: '/analytics/health',  icon: <FavoriteIcon fontSize="small" /> },
+      { label: 'Fire Analytics',    href: '/analytics/fire',    icon: <LocalFireDepartmentIcon fontSize="small" /> },
+      { label: 'Labour Analytics',  href: '/analytics/labour',  icon: <EngineeringIcon fontSize="small" /> },
     ],
   },
   { label: 'Settings', href: '/settings', icon: <SettingsIcon /> },
@@ -48,7 +102,8 @@ const NAV: NavItem[] = [
     label: 'Admin',
     icon: <AdminPanelSettingsIcon />,
     children: [
-      { label: 'Manage Categories', href: '/admin/categories', icon: <CategoryIcon fontSize="small" /> },
+      { label: 'Manage Categories', href: '/admin/categories',   icon: <CategoryIcon fontSize="small" /> },
+      { label: 'Lead Sources',      href: '/admin/lead-sources', icon: <TuneIcon fontSize="small" /> },
     ],
   },
 ];
@@ -63,7 +118,10 @@ const btnSx = (active: boolean) => ({
 
 function SidebarContent() {
   const pathname = usePathname();
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ 'Vehicle Records': true });
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    'Vehicle Records': true, 'Health Insurance': true,
+    'Fire Insurance': true, 'Labour Insurance': true, 'Analytics': false,
+  });
 
   const toggle = (label: string) =>
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -71,16 +129,9 @@ function SidebarContent() {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#0d1b6e' }}>
       {/* Logo */}
-      <Box sx={{ px: 3, py: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <DirectionsBusIcon sx={{ color: '#fff', fontSize: 28 }} />
-        <Box>
-          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>
-            A2 Insurance
-          </Typography>
-          <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.62rem', letterSpacing: 1.2 }}>
-            MANAGEMENT
-          </Typography>
-        </Box>
+      <Box sx={{ px: 2, py: 1.75, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/companylogo.png" alt="A2 Insurance" style={{ height: 44, width: 'auto', maxWidth: '100%', display: 'block', objectFit: 'contain' }} />
       </Box>
 
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
@@ -106,7 +157,7 @@ function SidebarContent() {
 
                 <Collapse in={open} timeout="auto" unmountOnExit>
                   <List disablePadding sx={{ pl: 1.5 }}>
-                    {item.children.map((child) => {
+                    {item.children.filter((c) => !c.hidden).map((child) => {
                       const childActive = pathname === child.href;
                       return (
                         <ListItem key={child.href} disablePadding sx={{ mb: 0.5 }}>

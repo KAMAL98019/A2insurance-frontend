@@ -7,19 +7,19 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
   Menu, MenuItem, ListItemIcon,
 } from '@mui/material';
-import VisibilityIcon  from '@mui/icons-material/Visibility';
-import EditIcon        from '@mui/icons-material/Edit';
-import DeleteIcon      from '@mui/icons-material/Delete';
-import WhatsAppIcon    from '@mui/icons-material/WhatsApp';
-import AddIcon         from '@mui/icons-material/Add';
-import ExpandMoreIcon  from '@mui/icons-material/ExpandMore';
-import CheckIcon       from '@mui/icons-material/Check';
-import NextLink        from 'next/link';
-import dayjs           from 'dayjs';
-import { renewalsApi }          from '../../lib/api/renewals';
-import { notificationsApi }     from '../../lib/api/notifications';
-import { useToast }             from '../../providers/ToastProvider';
-import { parseApiError }        from '../../lib/parse-error';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import AddIcon from '@mui/icons-material/Add';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckIcon from '@mui/icons-material/Check';
+import NextLink from 'next/link';
+import dayjs from 'dayjs';
+import { renewalsApi } from '../../lib/api/renewals';
+import { notificationsApi } from '../../lib/api/notifications';
+import { useToast } from '../../providers/ToastProvider';
+import { parseApiError } from '../../lib/parse-error';
 import type { VehicleRecord, EmbeddedRenewal, RenewalStatus } from '../../types/vehicle-record.types';
 import DocumentCell from './DocumentCell';
 
@@ -28,12 +28,12 @@ import DocumentCell from './DocumentCell';
 interface StatusCfg { label: string; color: string; bg: string }
 
 const STATUS: Record<RenewalStatus, StatusCfg> = {
-  CONTACTED:       { label: 'Contacted',       color: '#1565c0', bg: '#e3f2fd' },
-  DOCS_COLLECTED:  { label: 'Docs Collected',  color: '#6a1b9a', bg: '#f3e5f5' },
-  PROCESSING:      { label: 'Processing',      color: '#0277bd', bg: '#e1f5fe' },
+  CONTACTED: { label: 'Contacted', color: '#1565c0', bg: '#e3f2fd' },
+  DOCS_COLLECTED: { label: 'Docs Collected', color: '#6a1b9a', bg: '#f3e5f5' },
+  PROCESSING: { label: 'Processing', color: '#0277bd', bg: '#e1f5fe' },
   PAYMENT_PENDING: { label: 'Payment Pending', color: '#e65100', bg: '#fff3e0' },
-  RENEWED:         { label: 'Renewed',         color: '#2e7d32', bg: '#e8f5e9' },
-  CANCELLED:       { label: 'Cancelled',       color: '#757575', bg: '#f5f5f5' },
+  RENEWED: { label: 'Renewed', color: '#2e7d32', bg: '#e8f5e9' },
+  CANCELLED: { label: 'Cancelled', color: '#757575', bg: '#f5f5f5' },
 };
 
 const ALL_STATUSES = Object.entries(STATUS) as [RenewalStatus, StatusCfg][];
@@ -52,11 +52,11 @@ function expiryChip(dateStr: string, now: dayjs.Dayjs) {
   let color: string;
   let bg: string;
 
-  if (diff < 0)        { status = 'Expired';              color = '#c62828'; bg = '#ffebee'; }
-  else if (diff === 0) { status = 'Expires Today';         color = '#c62828'; bg = '#ffebee'; }
-  else if (diff <= 7)  { status = `${diff} day${diff > 1 ? 's' : ''} left`; color = '#e65100'; bg = '#fff3e0'; }
-  else if (diff <= 30) { status = `${diff} days left`;    color = '#1565c0'; bg = '#e3f2fd'; }
-  else                 { status = 'Active';                color = '#2e7d32'; bg = '#e8f5e9'; }
+  if (diff < 0) { status = 'Expired'; color = '#c62828'; bg = '#ffebee'; }
+  else if (diff === 0) { status = 'Expires Today'; color = '#c62828'; bg = '#ffebee'; }
+  else if (diff <= 7) { status = `${diff} day${diff > 1 ? 's' : ''} left`; color = '#e65100'; bg = '#fff3e0'; }
+  else if (diff <= 30) { status = `${diff} days left`; color = '#1565c0'; bg = '#e3f2fd'; }
+  else { status = 'Active'; color = '#2e7d32'; bg = '#e8f5e9'; }
 
   return (
     <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.4 }}>
@@ -84,9 +84,9 @@ interface RenewalCellProps {
 
 function RenewalCell({ vehicleId, initial }: RenewalCellProps) {
   const { showError } = useToast();
-  const [renewal,  setRenewal]  = useState<EmbeddedRenewal | null>(initial);
-  const [busy,     setBusy]     = useState(false);
-  const [anchor,   setAnchor]   = useState<HTMLElement | null>(null);
+  const [renewal, setRenewal] = useState<EmbeddedRenewal | null>(initial);
+  const [busy, setBusy] = useState(false);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   const startTracking = async () => {
     setBusy(true);
@@ -201,13 +201,13 @@ interface Props {
 
 export default function VehicleRecordTable({ records, loading, onDelete }: Props) {
   const { showSuccess, showError } = useToast();
-  const [now,       setNow]       = useState<dayjs.Dayjs | null>(null);
-  const [waTarget,  setWaTarget]  = useState<VehicleRecord | null>(null);
-  const [waPhone,   setWaPhone]   = useState('');
+  const [now, setNow] = useState<dayjs.Dayjs | null>(null);
+  const [waTarget, setWaTarget] = useState<VehicleRecord | null>(null);
+  const [waPhone, setWaPhone] = useState('');
   const [waMessage, setWaMessage] = useState('');
-  const [sending,   setSending]   = useState(false);
-  const [waStep,    setWaStep]    = useState<'pick' | 'compose'>('compose');
-  const [waLang,    setWaLang]    = useState<'english' | 'tamil'>('english');
+  const [sending, setSending] = useState(false);
+  const [waStep, setWaStep] = useState<'pick' | 'compose'>('compose');
+  const [waLang, setWaLang] = useState<'english' | 'tamil'>('english');
   const [contactSettings, setContactSettings] = useState({ name: '', phone: '', address: '' });
 
   useEffect(() => { setNow(dayjs()); }, []);
@@ -215,27 +215,27 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
   useEffect(() => {
     notificationsApi.getSettings().then((s) => {
       setContactSettings({
-        name:    s.contactName    ?? '',
-        phone:   s.contactPhone   ?? '',
+        name: s.contactName ?? '',
+        phone: s.contactPhone ?? '',
         address: s.contactAddress ?? '',
       });
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const buildFooter = (settings: typeof contactSettings): string => {
     const lines = [
-      settings.phone   ? `📞 ${settings.phone}`   : '',
+      settings.phone ? `📞 ${settings.phone}` : '',
       settings.address ? `📍 ${settings.address}` : '',
-      settings.name    || 'A2 Insurance',
+      settings.name || 'A2 Insurance Care',
     ].filter(Boolean);
     return `\n\n${lines.join('\n')}`;
   };
 
   const buildMessage = (r: VehicleRecord, lang: 'english' | 'tamil', settings: typeof contactSettings) => {
-    const exp  = dayjs(r.policyExpiryDate).format('DD MMM YYYY');
+    const exp = dayjs(r.policyExpiryDate).format('DD MMM YYYY');
     const diff = dayjs(r.policyExpiryDate).diff(dayjs(), 'day');
     const isTamil = lang === 'tamil';
-    const footer  = buildFooter(settings);
+    const footer = buildFooter(settings);
 
     if (diff < 0) {
       return isTamil
@@ -426,7 +426,7 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 {[
-                  { phone: waTarget.cellNumber,    label: 'Primary Number' },
+                  { phone: waTarget.cellNumber, label: 'Primary Number' },
                   { phone: waTarget.cellNumberAlt!, label: 'Alternate Number' },
                 ].map(({ phone, label }) => (
                   <Box
