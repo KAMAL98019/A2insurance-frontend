@@ -6,7 +6,6 @@ export interface CreateSuperAdminPayload {
   email: string;
   phoneNumber: string;
   password: string;
-  locationIds?: number[];
 }
 
 export interface CreateAdminUserPayload {

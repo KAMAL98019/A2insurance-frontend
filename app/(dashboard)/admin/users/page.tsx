@@ -46,7 +46,6 @@ function UsersView() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [locationId, setLocationId] = useState<number | ''>('');
-  const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
 
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [menuTarget, setMenuTarget] = useState<AuthUser | null>(null);
@@ -73,7 +72,7 @@ function UsersView() {
   useEffect(() => { if (me) load(); }, [me]);
 
   const resetForm = () => {
-    setName(''); setEmail(''); setPhone(''); setPassword(''); setLocationId(''); setSelectedLocationIds([]);
+    setName(''); setEmail(''); setPhone(''); setPassword(''); setLocationId('');
     setFormError('');
   };
 
@@ -88,7 +87,6 @@ function UsersView() {
     try {
       await usersApi.createSuperAdmin({
         name: name.trim(), email: email.trim(), phoneNumber: phone.trim(), password,
-        locationIds: selectedLocationIds,
       });
       showSuccess(`Super Admin "${name.trim()}" created`);
       setCreateSuperOpen(false);
@@ -283,24 +281,9 @@ function UsersView() {
               <TextField fullWidth size="small" label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Assign Locations</InputLabel>
-                <Select
-                  multiple
-                  label="Assign Locations"
-                  value={selectedLocationIds}
-                  onChange={(e) => setSelectedLocationIds(
-                    typeof e.target.value === 'string' ? [] : e.target.value as number[],
-                  )}
-                  renderValue={(selected) =>
-                    locations.filter((l) => selected.includes(l.id)).map((l) => l.name).join(', ')
-                  }
-                >
-                  {locations.map((l) => (
-                    <MenuItem key={l.id} value={l.id}>{l.name} ({l.code})</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Typography variant="caption" color="text.secondary">
+                Super Admins have full oversight of every location — no assignment needed.
+              </Typography>
             </Grid>
           </Grid>
           {formError && <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1.5 }}>{formError}</Typography>}
