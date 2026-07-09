@@ -18,6 +18,7 @@ import { exportLabourToExcel, exportLabourToCSV } from '../../../lib/export';
 import { parseApiError }      from '../../../lib/parse-error';
 import { useToast }           from '../../../providers/ToastProvider';
 import { useLocationFilterStore } from '../../../store/location-filter.store';
+import { useCan } from '../../../hooks/useCan';
 import LabourInsuranceTable   from '../../../components/labour-insurance/LabourInsuranceTable';
 import type { LabourInsuranceRecord, LabourPolicyStatus, LabourCustomerType, LabourPolicyType } from '../../../types/labour-insurance.types';
 import { LABOUR_STATUS_LABELS, LABOUR_POLICY_TYPE_LABELS } from '../../../types/labour-insurance.types';
@@ -28,6 +29,8 @@ const POLICY_TYPES: LabourPolicyType[] = ['UNNAMED', 'NAMED'];
 function LabourRecordsContent() {
   const { showError, showSuccess } = useToast();
   const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
+  const canCreate = useCan('labour-insurance', 'create');
+  const canExport = useCan('labour-insurance', 'export');
 
   const [all,      setAll]      = useState<LabourInsuranceRecord[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -101,14 +104,18 @@ function LabourRecordsContent() {
             </Box>
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
-            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-              onClick={(e) => setExportAnchor(e.currentTarget)}>
-              Export
-            </Button>
-            <Button variant="contained" size="small" startIcon={<AddIcon />}
-              component={NextLink} href="/labour-records/add" disableElevation>
-              Add Policy
-            </Button>
+            {canExport && (
+              <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+                onClick={(e) => setExportAnchor(e.currentTarget)}>
+                Export
+              </Button>
+            )}
+            {canCreate && (
+              <Button variant="contained" size="small" startIcon={<AddIcon />}
+                component={NextLink} href="/labour-records/add" disableElevation>
+                Add Policy
+              </Button>
+            )}
           </Box>
         </Box>
 
@@ -154,11 +161,13 @@ function LabourRecordsContent() {
                 Filters
               </Button>
             </Badge>
-            <Button variant="contained" size="small" disableElevation
-              component={NextLink} href="/labour-records/add"
-              sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
-              <AddIcon fontSize="small" />
-            </Button>
+            {canCreate && (
+              <Button variant="contained" size="small" disableElevation
+                component={NextLink} href="/labour-records/add"
+                sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
+                <AddIcon fontSize="small" />
+              </Button>
+            )}
           </Box>
 
           {activeFilterCount > 0 && (

@@ -25,6 +25,7 @@ import { categoriesApi }      from '../../../lib/api/categories';
 import { parseApiError }      from '../../../lib/parse-error';
 import { useToast }           from '../../../providers/ToastProvider';
 import { useLocationFilterStore } from '../../../store/location-filter.store';
+import { useCan } from '../../../hooks/useCan';
 import { exportToExcel, exportToCSV } from '../../../lib/export';
 import VehicleRecordTable from '../../../components/vehicle-records/VehicleRecordTable';
 import VehicleCalendarView from '../../../components/vehicle-records/VehicleCalendarView';
@@ -49,6 +50,8 @@ function VehicleRecordsContent() {
   const { showError, showSuccess } = useToast();
   const searchParams = useSearchParams();
   const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
+  const canCreate = useCan('vehicle-records', 'create');
+  const canExport = useCan('vehicle-records', 'export');
   const [all,        setAll]        = useState<VehicleRecord[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [deleteId,   setDeleteId]   = useState<number | null>(null);
@@ -187,14 +190,18 @@ function VehicleRecordsContent() {
               <ToggleButton value="table"><Tooltip title="Table"><TableRowsIcon fontSize="small" /></Tooltip></ToggleButton>
               <ToggleButton value="calendar"><Tooltip title="Calendar"><CalendarMonthIcon fontSize="small" /></Tooltip></ToggleButton>
             </ToggleButtonGroup>
-            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-              onClick={(e) => setExportAnchor(e.currentTarget)}>
-              Export
-            </Button>
-            <Button variant="contained" size="small" startIcon={<AddIcon />}
-              component={NextLink} href="/vehicle-records/add" disableElevation>
-              Add Vehicle
-            </Button>
+            {canExport && (
+              <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+                onClick={(e) => setExportAnchor(e.currentTarget)}>
+                Export
+              </Button>
+            )}
+            {canCreate && (
+              <Button variant="contained" size="small" startIcon={<AddIcon />}
+                component={NextLink} href="/vehicle-records/add" disableElevation>
+                Add Vehicle
+              </Button>
+            )}
           </Box>
         </Box>
 
@@ -247,13 +254,15 @@ function VehicleRecordsContent() {
               </Badge>
 
               {/* Mobile-only: Add Vehicle */}
-              <Button
-                variant="contained" size="small" disableElevation
-                component={NextLink} href="/vehicle-records/add"
-                sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}
-              >
-                <AddIcon fontSize="small" />
-              </Button>
+              {canCreate && (
+                <Button
+                  variant="contained" size="small" disableElevation
+                  component={NextLink} href="/vehicle-records/add"
+                  sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}
+                >
+                  <AddIcon fontSize="small" />
+                </Button>
+              )}
             </Box>
 
             {/* Active filter chips — shown below search on mobile */}
@@ -287,10 +296,12 @@ function VehicleRecordsContent() {
             <ToggleButton value="calendar"><Tooltip title="Calendar"><CalendarMonthIcon fontSize="small" /></Tooltip></ToggleButton>
           </ToggleButtonGroup>
           <Box sx={{ flex: 1 }} />
-          <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-            onClick={(e) => setExportAnchor(e.currentTarget)}>
-            Export
-          </Button>
+          {canExport && (
+            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+              onClick={(e) => setExportAnchor(e.currentTarget)}>
+              Export
+            </Button>
+          )}
         </Box>
       </Box>
 

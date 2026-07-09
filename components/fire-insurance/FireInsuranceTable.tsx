@@ -20,6 +20,7 @@ import NextLink        from 'next/link';
 import { fireRenewalsApi }    from '../../lib/api/fire-renewals';
 import { useToast }           from '../../providers/ToastProvider';
 import { parseApiError }      from '../../lib/parse-error';
+import { useCan }             from '../../hooks/useCan';
 import type { FireInsuranceRecord, EmbeddedFireRenewal, FireRenewalStatus, FirePolicyStatus } from '../../types/fire-insurance.types';
 import { FIRE_STATUS_LABELS, FIRE_STATUS_COLORS } from '../../types/fire-insurance.types';
 
@@ -38,7 +39,7 @@ const ALL_STATUSES = Object.entries(RENEWAL_STATUS) as [FireRenewalStatus, Statu
 
 // ─── Inline renewal cell ──────────────────────────────────────────────────────
 
-function FireRenewalCell({ fireId, initial }: { fireId: number; initial: EmbeddedFireRenewal | null }) {
+function FireRenewalCell({ fireId, initial, canCreate, canUpdate }: { fireId: number; initial: EmbeddedFireRenewal | null; canCreate: boolean; canUpdate: boolean }) {
   const { showError } = useToast();
   const [renewal, setRenewal] = useState<EmbeddedFireRenewal | null>(initial);
   const [busy,    setBusy]    = useState(false);
@@ -64,26 +65,29 @@ function FireRenewalCell({ fireId, initial }: { fireId: number; initial: Embedde
     } catch (err) { setRenewal(prev); showError(parseApiError(err)); }
   };
 
-  if (!renewal) return (
-    <Button size="small" variant="outlined"
-      startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
-      disabled={busy} onClick={startTracking}
-      sx={{ fontSize: '0.7rem', py: 0.35, px: 1, borderColor: 'divider', color: 'text.secondary', whiteSpace: 'nowrap' }}>
-      Start
-    </Button>
-  );
+  if (!renewal) {
+    if (!canCreate) return <Typography variant="caption" color="text.disabled">—</Typography>;
+    return (
+      <Button size="small" variant="outlined"
+        startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
+        disabled={busy} onClick={startTracking}
+        sx={{ fontSize: '0.7rem', py: 0.35, px: 1, borderColor: 'divider', color: 'text.secondary', whiteSpace: 'nowrap' }}>
+        Start
+      </Button>
+    );
+  }
 
   const cfg = RENEWAL_STATUS[renewal.status];
   return (
     <>
-      <Box onClick={(e) => setAnchor(e.currentTarget)}
+      <Box onClick={(e) => canUpdate && setAnchor(e.currentTarget)}
         sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1.25, py: 0.4, borderRadius: 5,
           bgcolor: cfg.bg, border: `1px solid ${cfg.color}30`, color: cfg.color,
-          fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
-          transition: 'filter 0.15s', '&:hover': { filter: 'brightness(0.95)' } }}>
+          fontSize: '0.7rem', fontWeight: 700, cursor: canUpdate ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap',
+          transition: 'filter 0.15s', '&:hover': canUpdate ? { filter: 'brightness(0.95)' } : {} }}>
         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: cfg.color, flexShrink: 0 }} />
         {cfg.label}
-        <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />
+        {canUpdate && <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />}
       </Box>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}
         slotProps={{ paper: { sx: { borderRadius: 2, boxShadow: 4, minWidth: 180 } } }}
@@ -208,6 +212,10 @@ const HEADERS = ['Policy No.', 'Insured Name', 'Company', 'Mobile', 'Business Ty
 interface Props { records: FireInsuranceRecord[]; loading: boolean; onDelete: (id: number) => void }
 
 export default function FireInsuranceTable({ records, loading, onDelete }: Props) {
+  const canUpdate = useCan('fire-insurance', 'update');
+  const canDelete = useCan('fire-insurance', 'delete');
+  const canCreate = useCan('fire-insurance', 'create');
+
   if (loading) return (
     <TableContainer>
       <Table size="small">
@@ -267,18 +275,22 @@ export default function FireInsuranceTable({ records, loading, onDelete }: Props
                 <TableCell><StatusChip status={r.policyStatus} /></TableCell>
                 <TableCell><FireDocCell record={r} /></TableCell>
                 <TableCell sx={{ py: 1 }}>
-                  <FireRenewalCell fireId={r.id} initial={r.renewals?.[0] ?? null} />
+                  <FireRenewalCell fireId={r.id} initial={r.renewals?.[0] ?? null} canCreate={canCreate} canUpdate={canUpdate} />
                 </TableCell>
                 <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                   <Tooltip title="View">
                     <IconButton size="small" component={NextLink} href={`/fire-records/${r.id}`}><VisibilityIcon fontSize="small" /></IconButton>
                   </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" component={NextLink} href={`/fire-records/${r.id}/edit`}><EditIcon fontSize="small" /></IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => onDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
-                  </Tooltip>
+                  {canUpdate && (
+                    <Tooltip title="Edit">
+                      <IconButton size="small" component={NextLink} href={`/fire-records/${r.id}/edit`}><EditIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                  )}
+                  {canDelete && (
+                    <Tooltip title="Delete">
+                      <IconButton size="small" color="error" onClick={() => onDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                  )}
                 </TableCell>
               </TableRow>
             );

@@ -16,6 +16,7 @@ import NextLink        from 'next/link';
 import { healthRenewalsApi }     from '../../lib/api/health-renewals';
 import { useToast }              from '../../providers/ToastProvider';
 import { parseApiError }         from '../../lib/parse-error';
+import { useCan }                from '../../hooks/useCan';
 import type {
   HealthInsuranceRecord, HealthPolicyStatus,
   EmbeddedHealthRenewal, HealthRenewalStatus,
@@ -43,9 +44,11 @@ const ALL_RENEWAL_STATUSES = Object.entries(RENEWAL_STATUS) as [HealthRenewalSta
 interface HealthRenewalCellProps {
   healthId: number;
   initial: EmbeddedHealthRenewal | null;
+  canCreate: boolean;
+  canUpdate: boolean;
 }
 
-function HealthRenewalCell({ healthId, initial }: HealthRenewalCellProps) {
+function HealthRenewalCell({ healthId, initial, canCreate, canUpdate }: HealthRenewalCellProps) {
   const { showError } = useToast();
   const [renewal, setRenewal] = useState<EmbeddedHealthRenewal | null>(initial);
   const [busy,    setBusy]    = useState(false);
@@ -84,6 +87,7 @@ function HealthRenewalCell({ healthId, initial }: HealthRenewalCellProps) {
   };
 
   if (!renewal) {
+    if (!canCreate) return <Typography variant="caption" color="text.disabled">—</Typography>;
     return (
       <Button
         size="small" variant="outlined"
@@ -102,7 +106,7 @@ function HealthRenewalCell({ healthId, initial }: HealthRenewalCellProps) {
   return (
     <>
       <Box
-        onClick={(e) => setAnchor(e.currentTarget)}
+        onClick={(e) => canUpdate && setAnchor(e.currentTarget)}
         sx={{
           display: 'inline-flex', alignItems: 'center', gap: 0.5,
           px: 1.25, py: 0.4,
@@ -111,16 +115,16 @@ function HealthRenewalCell({ healthId, initial }: HealthRenewalCellProps) {
           border: `1px solid ${cfg.color}30`,
           color: cfg.color,
           fontSize: '0.7rem', fontWeight: 700,
-          cursor: 'pointer',
+          cursor: canUpdate ? 'pointer' : 'default',
           userSelect: 'none',
           whiteSpace: 'nowrap',
           transition: 'filter 0.15s',
-          '&:hover': { filter: 'brightness(0.95)' },
+          '&:hover': canUpdate ? { filter: 'brightness(0.95)' } : {},
         }}
       >
         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: cfg.color, flexShrink: 0 }} />
         {cfg.label}
-        <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />
+        {canUpdate && <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />}
       </Box>
 
       <Menu
@@ -215,6 +219,10 @@ interface Props {
 const HEADERS = ['Policy No.', 'Holder Name', 'Company', 'Mobile', 'Type', 'Sum Insured', 'Premium', 'Expiry Date', 'Renewal Date', 'Status', 'Documents', 'Tracking', 'Actions'];
 
 export default function HealthInsuranceTable({ records, loading, onDelete }: Props) {
+  const canUpdate = useCan('health-insurance', 'update');
+  const canDelete = useCan('health-insurance', 'delete');
+  const canCreate = useCan('health-insurance', 'create');
+
   if (loading) {
     return (
       <TableContainer>
@@ -316,6 +324,8 @@ export default function HealthInsuranceTable({ records, loading, onDelete }: Pro
                   <HealthRenewalCell
                     healthId={r.id}
                     initial={r.renewals?.[0] ?? null}
+                    canCreate={canCreate}
+                    canUpdate={canUpdate}
                   />
                 </TableCell>
                 <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
@@ -324,16 +334,20 @@ export default function HealthInsuranceTable({ records, loading, onDelete }: Pro
                       <VisibilityIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" component={NextLink} href={`/health-records/${r.id}/edit`}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => onDelete(r.id)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  {canUpdate && (
+                    <Tooltip title="Edit">
+                      <IconButton size="small" component={NextLink} href={`/health-records/${r.id}/edit`}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {canDelete && (
+                    <Tooltip title="Delete">
+                      <IconButton size="small" color="error" onClick={() => onDelete(r.id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </TableCell>
               </TableRow>
             );

@@ -18,6 +18,7 @@ import { exportFireToExcel, exportFireToCSV } from '../../../lib/export';
 import { parseApiError }     from '../../../lib/parse-error';
 import { useToast }          from '../../../providers/ToastProvider';
 import { useLocationFilterStore } from '../../../store/location-filter.store';
+import { useCan } from '../../../hooks/useCan';
 import FireInsuranceTable    from '../../../components/fire-insurance/FireInsuranceTable';
 import type { FireInsuranceRecord, FirePolicyStatus, FireCustomerType } from '../../../types/fire-insurance.types';
 import { FIRE_STATUS_LABELS } from '../../../types/fire-insurance.types';
@@ -27,6 +28,8 @@ const STATUSES: FirePolicyStatus[] = ['ACTIVE', 'EXPIRED', 'PENDING_RENEWAL', 'C
 function FireRecordsContent() {
   const { showError, showSuccess } = useToast();
   const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
+  const canCreate = useCan('fire-insurance', 'create');
+  const canExport = useCan('fire-insurance', 'export');
 
   const [all,      setAll]      = useState<FireInsuranceRecord[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -98,14 +101,18 @@ function FireRecordsContent() {
             </Box>
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
-            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-              onClick={(e) => setExportAnchor(e.currentTarget)}>
-              Export
-            </Button>
-            <Button variant="contained" size="small" startIcon={<AddIcon />}
-              component={NextLink} href="/fire-records/add" disableElevation>
-              Add Policy
-            </Button>
+            {canExport && (
+              <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+                onClick={(e) => setExportAnchor(e.currentTarget)}>
+                Export
+              </Button>
+            )}
+            {canCreate && (
+              <Button variant="contained" size="small" startIcon={<AddIcon />}
+                component={NextLink} href="/fire-records/add" disableElevation>
+                Add Policy
+              </Button>
+            )}
           </Box>
         </Box>
 
@@ -151,11 +158,13 @@ function FireRecordsContent() {
                 Filters
               </Button>
             </Badge>
-            <Button variant="contained" size="small" disableElevation
-              component={NextLink} href="/fire-records/add"
-              sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
-              <AddIcon fontSize="small" />
-            </Button>
+            {canCreate && (
+              <Button variant="contained" size="small" disableElevation
+                component={NextLink} href="/fire-records/add"
+                sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
+                <AddIcon fontSize="small" />
+              </Button>
+            )}
           </Box>
 
           {activeFilterCount > 0 && (

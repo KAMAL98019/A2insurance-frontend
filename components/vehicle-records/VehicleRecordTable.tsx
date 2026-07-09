@@ -20,6 +20,7 @@ import { renewalsApi } from '../../lib/api/renewals';
 import { notificationsApi } from '../../lib/api/notifications';
 import { useToast } from '../../providers/ToastProvider';
 import { parseApiError } from '../../lib/parse-error';
+import { useCan } from '../../hooks/useCan';
 import type { VehicleRecord, EmbeddedRenewal, RenewalStatus } from '../../types/vehicle-record.types';
 import DocumentCell from './DocumentCell';
 
@@ -80,9 +81,11 @@ function expiryChip(dateStr: string, now: dayjs.Dayjs) {
 interface RenewalCellProps {
   vehicleId: number;
   initial: EmbeddedRenewal | null;
+  canCreate: boolean;
+  canUpdate: boolean;
 }
 
-function RenewalCell({ vehicleId, initial }: RenewalCellProps) {
+function RenewalCell({ vehicleId, initial, canCreate, canUpdate }: RenewalCellProps) {
   const { showError } = useToast();
   const [renewal, setRenewal] = useState<EmbeddedRenewal | null>(initial);
   const [busy, setBusy] = useState(false);
@@ -122,6 +125,7 @@ function RenewalCell({ vehicleId, initial }: RenewalCellProps) {
 
   // No tracking started yet
   if (!renewal) {
+    if (!canCreate) return <Typography variant="caption" color="text.disabled">—</Typography>;
     return (
       <Button
         size="small" variant="outlined" startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
@@ -139,7 +143,7 @@ function RenewalCell({ vehicleId, initial }: RenewalCellProps) {
   return (
     <>
       <Box
-        onClick={(e) => setAnchor(e.currentTarget)}
+        onClick={(e) => canUpdate && setAnchor(e.currentTarget)}
         sx={{
           display: 'inline-flex', alignItems: 'center', gap: 0.5,
           px: 1.25, py: 0.4,
@@ -148,16 +152,16 @@ function RenewalCell({ vehicleId, initial }: RenewalCellProps) {
           border: `1px solid ${cfg.color}30`,
           color: cfg.color,
           fontSize: '0.7rem', fontWeight: 700,
-          cursor: 'pointer',
+          cursor: canUpdate ? 'pointer' : 'default',
           userSelect: 'none',
           whiteSpace: 'nowrap',
           transition: 'filter 0.15s',
-          '&:hover': { filter: 'brightness(0.95)' },
+          '&:hover': canUpdate ? { filter: 'brightness(0.95)' } : {},
         }}
       >
         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: cfg.color, flexShrink: 0 }} />
         {cfg.label}
-        <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />
+        {canUpdate && <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />}
       </Box>
 
       <Menu
@@ -201,6 +205,9 @@ interface Props {
 
 export default function VehicleRecordTable({ records, loading, onDelete }: Props) {
   const { showSuccess, showError } = useToast();
+  const canUpdate = useCan('vehicle-records', 'update');
+  const canDelete = useCan('vehicle-records', 'delete');
+  const canCreate = useCan('vehicle-records', 'create');
   const [now, setNow] = useState<dayjs.Dayjs | null>(null);
   const [waTarget, setWaTarget] = useState<VehicleRecord | null>(null);
   const [waPhone, setWaPhone] = useState('');
@@ -367,6 +374,8 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
                   <RenewalCell
                     vehicleId={r.id}
                     initial={r.renewals?.[0] ?? null}
+                    canCreate={canCreate}
+                    canUpdate={canUpdate}
                   />
                 </TableCell>
 
@@ -377,21 +386,25 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
                         <VisibilityIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edit">
-                      <IconButton size="small" component={NextLink} href={`/vehicle-records/${r.id}/edit`} color="info">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    {canUpdate && (
+                      <Tooltip title="Edit">
+                        <IconButton size="small" component={NextLink} href={`/vehicle-records/${r.id}/edit`} color="info">
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     <Tooltip title="Send WhatsApp">
                       <IconButton size="small" color="success" onClick={() => openWhatsApp(r)}>
                         <WhatsAppIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton size="small" color="error" onClick={() => onDelete(r.id)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    {canDelete && (
+                      <Tooltip title="Delete">
+                        <IconButton size="small" color="error" onClick={() => onDelete(r.id)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                   </Box>
                 </TableCell>
               </TableRow>

@@ -18,8 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { loginSchema, LoginFormValues } from '../../lib/validations/login.schema';
 import { useAuth } from '../../hooks/useAuth';
 import LoadingButton from '../ui/LoadingButton';
-import { AxiosError } from 'axios';
-import { ApiError } from '../../types/auth.types';
+import { parseApiError } from '../../lib/parse-error';
 
 export default function LoginForm() {
   const { login } = useAuth();
@@ -41,9 +40,7 @@ export default function LoginForm() {
     try {
       await login(values);
     } catch (err) {
-      const error = err as AxiosError<{ data: ApiError }>;
-      const msg = error.response?.data?.data?.message;
-      setServerError(Array.isArray(msg) ? msg[0] : (msg ?? 'Login failed. Please try again.'));
+      setServerError(parseApiError(err));
     } finally {
       setLoading(false);
     }

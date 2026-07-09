@@ -18,6 +18,7 @@ import { exportHealthToExcel, exportHealthToCSV } from '../../../lib/export';
 import { parseApiError }       from '../../../lib/parse-error';
 import { useToast }            from '../../../providers/ToastProvider';
 import { useLocationFilterStore } from '../../../store/location-filter.store';
+import { useCan } from '../../../hooks/useCan';
 import HealthInsuranceTable    from '../../../components/health-insurance/HealthInsuranceTable';
 import type { HealthInsuranceRecord, HealthPolicyStatus, HealthPolicyType, HealthCustomerType } from '../../../types/health-insurance.types';
 import { POLICY_STATUS_LABELS, POLICY_TYPE_LABELS } from '../../../types/health-insurance.types';
@@ -28,6 +29,8 @@ const TYPES: HealthPolicyType[] = ['INDIVIDUAL', 'FAMILY_FLOATER', 'SENIOR_CITIZ
 function HealthRecordsContent() {
   const { showError, showSuccess } = useToast();
   const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
+  const canCreate = useCan('health-insurance', 'create');
+  const canExport = useCan('health-insurance', 'export');
 
   const [all,       setAll]       = useState<HealthInsuranceRecord[]>([]);
   const [loading,   setLoading]   = useState(true);
@@ -111,14 +114,18 @@ function HealthRecordsContent() {
             </Box>
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
-            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-              onClick={(e) => setExportAnchor(e.currentTarget)}>
-              Export
-            </Button>
-            <Button variant="contained" size="small" startIcon={<AddIcon />}
-              component={NextLink} href="/health-records/add" disableElevation>
-              Add Policy
-            </Button>
+            {canExport && (
+              <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+                onClick={(e) => setExportAnchor(e.currentTarget)}>
+                Export
+              </Button>
+            )}
+            {canCreate && (
+              <Button variant="contained" size="small" startIcon={<AddIcon />}
+                component={NextLink} href="/health-records/add" disableElevation>
+                Add Policy
+              </Button>
+            )}
           </Box>
         </Box>
 
@@ -165,11 +172,13 @@ function HealthRecordsContent() {
                 Filters
               </Button>
             </Badge>
-            <Button variant="contained" size="small" disableElevation
-              component={NextLink} href="/health-records/add"
-              sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
-              <AddIcon fontSize="small" />
-            </Button>
+            {canCreate && (
+              <Button variant="contained" size="small" disableElevation
+                component={NextLink} href="/health-records/add"
+                sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
+                <AddIcon fontSize="small" />
+              </Button>
+            )}
           </Box>
 
           {activeFilterCount > 0 && (

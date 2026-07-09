@@ -21,6 +21,7 @@ import NextLink        from 'next/link';
 import { labourRenewalsApi }  from '../../lib/api/labour-renewals';
 import { useToast }           from '../../providers/ToastProvider';
 import { parseApiError }      from '../../lib/parse-error';
+import { useCan }             from '../../hooks/useCan';
 import type { LabourInsuranceRecord, EmbeddedLabourRenewal, LabourRenewalStatus, LabourPolicyStatus } from '../../types/labour-insurance.types';
 import { LABOUR_STATUS_LABELS, LABOUR_STATUS_COLORS, LABOUR_POLICY_TYPE_LABELS } from '../../types/labour-insurance.types';
 
@@ -39,7 +40,7 @@ const ALL_STATUSES = Object.entries(RENEWAL_STATUS) as [LabourRenewalStatus, Sta
 
 // ─── Inline renewal cell ──────────────────────────────────────────────────────
 
-function LabourRenewalCell({ labourId, initial }: { labourId: number; initial: EmbeddedLabourRenewal | null }) {
+function LabourRenewalCell({ labourId, initial, canCreate, canUpdate }: { labourId: number; initial: EmbeddedLabourRenewal | null; canCreate: boolean; canUpdate: boolean }) {
   const { showError } = useToast();
   const [renewal, setRenewal] = useState<EmbeddedLabourRenewal | null>(initial);
   const [busy,    setBusy]    = useState(false);
@@ -65,26 +66,29 @@ function LabourRenewalCell({ labourId, initial }: { labourId: number; initial: E
     } catch (err) { setRenewal(prev); showError(parseApiError(err)); }
   };
 
-  if (!renewal) return (
-    <Button size="small" variant="outlined"
-      startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
-      disabled={busy} onClick={startTracking}
-      sx={{ fontSize: '0.7rem', py: 0.35, px: 1, borderColor: 'divider', color: 'text.secondary', whiteSpace: 'nowrap' }}>
-      Start
-    </Button>
-  );
+  if (!renewal) {
+    if (!canCreate) return <Typography variant="caption" color="text.disabled">—</Typography>;
+    return (
+      <Button size="small" variant="outlined"
+        startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
+        disabled={busy} onClick={startTracking}
+        sx={{ fontSize: '0.7rem', py: 0.35, px: 1, borderColor: 'divider', color: 'text.secondary', whiteSpace: 'nowrap' }}>
+        Start
+      </Button>
+    );
+  }
 
   const cfg = RENEWAL_STATUS[renewal.status];
   return (
     <>
-      <Box onClick={(e) => setAnchor(e.currentTarget)}
+      <Box onClick={(e) => canUpdate && setAnchor(e.currentTarget)}
         sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1.25, py: 0.4, borderRadius: 5,
           bgcolor: cfg.bg, border: `1px solid ${cfg.color}30`, color: cfg.color,
-          fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
-          transition: 'filter 0.15s', '&:hover': { filter: 'brightness(0.95)' } }}>
+          fontSize: '0.7rem', fontWeight: 700, cursor: canUpdate ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap',
+          transition: 'filter 0.15s', '&:hover': canUpdate ? { filter: 'brightness(0.95)' } : {} }}>
         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: cfg.color, flexShrink: 0 }} />
         {cfg.label}
-        <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />
+        {canUpdate && <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />}
       </Box>
       <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}
         slotProps={{ paper: { sx: { borderRadius: 2, boxShadow: 4, minWidth: 180 } } }}
@@ -213,6 +217,10 @@ const HEADERS = ['Policy No.', 'Company Name', 'Insurer', 'Mobile', 'Policy Type
 interface Props { records: LabourInsuranceRecord[]; loading: boolean; onDelete: (id: number) => void }
 
 export default function LabourInsuranceTable({ records, loading, onDelete }: Props) {
+  const canUpdate = useCan('labour-insurance', 'update');
+  const canDelete = useCan('labour-insurance', 'delete');
+  const canCreate = useCan('labour-insurance', 'create');
+
   if (loading) return (
     <TableContainer>
       <Table size="small">
@@ -283,18 +291,22 @@ export default function LabourInsuranceTable({ records, loading, onDelete }: Pro
                 <TableCell><StatusChip status={r.policyStatus} /></TableCell>
                 <TableCell><LabourDocCell record={r} /></TableCell>
                 <TableCell sx={{ py: 1 }}>
-                  <LabourRenewalCell labourId={r.id} initial={r.renewals?.[0] ?? null} />
+                  <LabourRenewalCell labourId={r.id} initial={r.renewals?.[0] ?? null} canCreate={canCreate} canUpdate={canUpdate} />
                 </TableCell>
                 <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                   <Tooltip title="View">
                     <IconButton size="small" component={NextLink} href={`/labour-records/${r.id}`}><VisibilityIcon fontSize="small" /></IconButton>
                   </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small" component={NextLink} href={`/labour-records/${r.id}/edit`}><EditIcon fontSize="small" /></IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => onDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
-                  </Tooltip>
+                  {canUpdate && (
+                    <Tooltip title="Edit">
+                      <IconButton size="small" component={NextLink} href={`/labour-records/${r.id}/edit`}><EditIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                  )}
+                  {canDelete && (
+                    <Tooltip title="Delete">
+                      <IconButton size="small" color="error" onClick={() => onDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
+                    </Tooltip>
+                  )}
                 </TableCell>
               </TableRow>
             );
