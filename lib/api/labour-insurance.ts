@@ -10,6 +10,7 @@ export interface LabourInsuranceQuery {
   policyStatus?: LabourPolicyStatus;
   customerType?: LabourCustomerType;
   renewalDays?: number;
+  locationId?: number | null;
 }
 
 function toParams(q: LabourInsuranceQuery): Record<string, string> {
@@ -18,6 +19,7 @@ function toParams(q: LabourInsuranceQuery): Record<string, string> {
   if (q.policyStatus) p.policyStatus = q.policyStatus;
   if (q.customerType) p.customerType = q.customerType;
   if (q.renewalDays)  p.renewalDays  = String(q.renewalDays);
+  if (q.locationId)   p.locationId   = String(q.locationId);
   return p;
 }
 

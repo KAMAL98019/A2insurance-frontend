@@ -10,6 +10,7 @@ export interface FireInsuranceQuery {
   policyStatus?: FirePolicyStatus;
   customerType?: FireCustomerType;
   renewalDays?: number;
+  locationId?: number | null;
 }
 
 function toParams(q: FireInsuranceQuery): Record<string, string> {
@@ -18,6 +19,7 @@ function toParams(q: FireInsuranceQuery): Record<string, string> {
   if (q.policyStatus) p.policyStatus = q.policyStatus;
   if (q.customerType) p.customerType = q.customerType;
   if (q.renewalDays)  p.renewalDays  = String(q.renewalDays);
+  if (q.locationId)   p.locationId   = String(q.locationId);
   return p;
 }
 

@@ -3,8 +3,10 @@ import type { VehicleRecord, CreateVehicleRecordPayload, UpdateVehicleRecordPayl
 import type { ApiResponse } from '../../types/auth.types';
 
 export const vehicleRecordsApi = {
-  getAll: () =>
-    apiClient.get<ApiResponse<VehicleRecord[]>>('/vehicle-records').then((r) => r.data.data),
+  getAll: (locationId?: number | null) =>
+    apiClient
+      .get<ApiResponse<VehicleRecord[]>>('/vehicle-records', { params: locationId ? { locationId } : undefined })
+      .then((r) => r.data.data),
 
   getOne: (id: number) =>
     apiClient.get<ApiResponse<VehicleRecord>>(`/vehicle-records/${id}`).then((r) => r.data.data),

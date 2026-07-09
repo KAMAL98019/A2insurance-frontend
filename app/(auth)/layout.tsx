@@ -41,7 +41,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
         {/* Footer */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', zIndex: 1, opacity: 0.7 }}>
-          <Typography variant="caption">© 2024 A2 Insurance Management</Typography>
+          <Typography variant="caption">© 2026 A2 Insurance Management</Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Typography variant="caption" sx={{ cursor: 'pointer', '&:hover': { opacity: 1 } }}>Privacy Policy</Typography>
             <Typography variant="caption" sx={{ cursor: 'pointer', '&:hover': { opacity: 1 } }}>Terms of Service</Typography>

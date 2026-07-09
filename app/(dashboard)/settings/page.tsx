@@ -23,6 +23,8 @@ import { exportLogsToExcel, exportLogsToCSV } from '../../../lib/export';
 import { notificationsApi } from '../../../lib/api/notifications';
 import { useToast }         from '../../../providers/ToastProvider';
 import { parseApiError }    from '../../../lib/parse-error';
+import { useCurrentUser }   from '../../../hooks/useCurrentUser';
+import ProtectedRoute       from '../../../components/auth/ProtectedRoute';
 import type { NotificationSettings, NotificationLog, NotifStats } from '../../../types/notification.types';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -55,8 +57,10 @@ function StatusChip({ status }: { status: string }) {
   return <Chip icon={cfg.icon} label={cfg.label} size="small" color={cfg.color} variant="outlined" />;
 }
 
-export default function SettingsPage() {
+function SettingsView() {
   const { showSuccess, showError } = useToast();
+  const me = useCurrentUser();
+  const canManageWhatsApp = me?.role === 'SUPER_ADMIN';
 
   const PAGE_SIZE = 10;
 
@@ -91,7 +95,7 @@ export default function SettingsPage() {
       notificationsApi.getSettings(),
       notificationsApi.getLogs(500),
       notificationsApi.getStats(),
-      notificationsApi.getWhatsAppStatus(),
+      canManageWhatsApp ? notificationsApi.getWhatsAppStatus() : Promise.resolve({ connected: false }),
     ])
       .then(([s, l, st, wa]) => {
         setLogs(l);
@@ -117,7 +121,7 @@ export default function SettingsPage() {
 
   // Poll for QR code when disconnected; auto-refresh every 2 minutes
   useEffect(() => {
-    if (loading) return;
+    if (loading || !canManageWhatsApp) return;
     if (waConnected) { setQrDataUrl(null); return; }
 
     let cancelled = false;
@@ -149,7 +153,7 @@ export default function SettingsPage() {
       clearInterval(pollInterval);
       clearInterval(refreshInterval);
     };
-  }, [waConnected, loading]);
+  }, [waConnected, loading, canManageWhatsApp]);
 
   const handleRefreshQR = async () => {
     setQrRefreshing(true);
@@ -672,5 +676,13 @@ export default function SettingsPage() {
         </Grid>
       </Grid>
     </Box>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
+      <SettingsView />
+    </ProtectedRoute>
   );
 }

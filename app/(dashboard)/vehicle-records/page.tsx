@@ -24,6 +24,7 @@ import { vehicleRecordsApi } from '../../../lib/api/vehicle-records';
 import { categoriesApi }      from '../../../lib/api/categories';
 import { parseApiError }      from '../../../lib/parse-error';
 import { useToast }           from '../../../providers/ToastProvider';
+import { useLocationFilterStore } from '../../../store/location-filter.store';
 import { exportToExcel, exportToCSV } from '../../../lib/export';
 import VehicleRecordTable from '../../../components/vehicle-records/VehicleRecordTable';
 import VehicleCalendarView from '../../../components/vehicle-records/VehicleCalendarView';
@@ -47,6 +48,7 @@ const TRACKING_OPTIONS: { value: TrackingFilter; label: string; color?: string }
 function VehicleRecordsContent() {
   const { showError, showSuccess } = useToast();
   const searchParams = useSearchParams();
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
   const [all,        setAll]        = useState<VehicleRecord[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [deleteId,   setDeleteId]   = useState<number | null>(null);
@@ -70,10 +72,14 @@ function VehicleRecordsContent() {
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
-    vehicleRecordsApi.getAll()
+    setLoading(true);
+    vehicleRecordsApi.getAll(selectedLocationId)
       .then(setAll)
       .catch((err) => showError(parseApiError(err)))
       .finally(() => setLoading(false));
+  }, [selectedLocationId]);
+
+  useEffect(() => {
     categoriesApi.getAll().then(setCategories).catch(() => {});
   }, []);
 

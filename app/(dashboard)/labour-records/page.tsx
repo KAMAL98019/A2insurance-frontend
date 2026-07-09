@@ -17,6 +17,7 @@ import { labourInsuranceApi } from '../../../lib/api/labour-insurance';
 import { exportLabourToExcel, exportLabourToCSV } from '../../../lib/export';
 import { parseApiError }      from '../../../lib/parse-error';
 import { useToast }           from '../../../providers/ToastProvider';
+import { useLocationFilterStore } from '../../../store/location-filter.store';
 import LabourInsuranceTable   from '../../../components/labour-insurance/LabourInsuranceTable';
 import type { LabourInsuranceRecord, LabourPolicyStatus, LabourCustomerType, LabourPolicyType } from '../../../types/labour-insurance.types';
 import { LABOUR_STATUS_LABELS, LABOUR_POLICY_TYPE_LABELS } from '../../../types/labour-insurance.types';
@@ -26,6 +27,7 @@ const POLICY_TYPES: LabourPolicyType[] = ['UNNAMED', 'NAMED'];
 
 function LabourRecordsContent() {
   const { showError, showSuccess } = useToast();
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
 
   const [all,      setAll]      = useState<LabourInsuranceRecord[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -39,11 +41,12 @@ function LabourRecordsContent() {
   const [exportAnchor,     setExportAnchor]     = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    labourInsuranceApi.getAll()
+    setLoading(true);
+    labourInsuranceApi.getAll({ locationId: selectedLocationId })
       .then(setAll)
       .catch((err) => showError(parseApiError(err)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedLocationId]);
 
   const filtered = useMemo(() => {
     let result = [...all];

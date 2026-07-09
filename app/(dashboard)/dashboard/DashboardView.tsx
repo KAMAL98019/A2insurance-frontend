@@ -23,6 +23,7 @@ import EngineeringIcon         from '@mui/icons-material/Engineering';
 import BarChartIcon            from '@mui/icons-material/BarChart';
 import NextLink                from 'next/link';
 import { useAuthStore }        from '../../../store/auth.store';
+import { useLocationFilterStore } from '../../../store/location-filter.store';
 import { dashboardApi }        from '../../../lib/api/dashboard';
 import type { DashboardStats, ExpiryAlert } from '../../../types/vehicle-record.types';
 
@@ -163,14 +164,16 @@ function CategoryBar({ category, count, max }: { category: string; count: number
 
 export default function DashboardView() {
   const user = useAuthStore((s) => s.user);
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
   const [stats,   setStats]   = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [today,   setToday]   = useState('');
 
   useEffect(() => {
-    dashboardApi.getStats().then(setStats).catch(console.error).finally(() => setLoading(false));
+    setLoading(true);
+    dashboardApi.getStats(selectedLocationId).then(setStats).catch(console.error).finally(() => setLoading(false));
     setToday(new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
-  }, []);
+  }, [selectedLocationId]);
 
   const maxCategory = Math.max(...(stats?.categoryBreakdown.map((c) => c.count) ?? [1]));
 
@@ -192,7 +195,8 @@ export default function DashboardView() {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
             <Typography variant="body2" color="text.secondary">{today}</Typography>
-            {user?.role === 'ADMIN' && <Chip label="Admin" size="small" color="primary" sx={{ fontWeight: 600 }} />}
+            {user?.role === 'MASTER_ADMIN' && <Chip label="Master Admin" size="small" color="primary" sx={{ fontWeight: 600 }} />}
+            {user?.role === 'SUPER_ADMIN' && <Chip label="Super Admin" size="small" color="secondary" sx={{ fontWeight: 600 }} />}
           </Box>
         </Box>
         <Button variant="outlined" startIcon={<BarChartIcon />}

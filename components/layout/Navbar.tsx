@@ -20,6 +20,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { useAuth } from '../../hooks/useAuth';
 import { SIDEBAR_WIDTH } from './Sidebar';
 import NotificationBell from './NotificationBell';
+import LocationSwitcher from './LocationSwitcher';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -60,8 +61,13 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           A2 Insurance Care
         </Typography>
 
-        {user?.role === 'ADMIN' && (
-          <Chip label="Admin" size="small" color="primary" sx={{ mr: 1, fontWeight: 600 }} />
+        <LocationSwitcher />
+
+        {user?.role === 'MASTER_ADMIN' && (
+          <Chip label="Master Admin" size="small" color="primary" sx={{ mr: 1, fontWeight: 600 }} />
+        )}
+        {user?.role === 'SUPER_ADMIN' && (
+          <Chip label="Super Admin" size="small" color="secondary" sx={{ mr: 1, fontWeight: 600 }} />
         )}
 
         <NotificationBell />

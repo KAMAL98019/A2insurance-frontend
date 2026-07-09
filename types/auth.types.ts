@@ -1,12 +1,31 @@
-export type UserRole = 'ADMIN' | 'USER';
+export type UserRole = 'MASTER_ADMIN' | 'SUPER_ADMIN' | 'ADMIN_USER';
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'export';
+
+export interface ModulePermission {
+  id?: number;
+  adminUserId?: number;
+  moduleName: string;
+  canView: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  canExport: boolean;
+}
 
 export interface AuthUser {
   id: number;
   name: string;
   email: string;
   role: UserRole;
+  status: UserStatus;
   phoneNumber?: string;
-  isActive: boolean;
+  createdById?: number | null;
+  superAdminId?: number | null;
+  primaryLocationId?: number | null;
+  accessibleLocationIds?: number[] | null;
+  permissions?: ModulePermission[];
+  lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

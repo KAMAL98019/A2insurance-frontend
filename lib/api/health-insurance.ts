@@ -17,6 +17,7 @@ export interface HealthInsuranceQuery {
   customerType?: HealthCustomerType;
   insuranceCompanyName?: string;
   renewalDays?: number;
+  locationId?: number | null;
 }
 
 function toParams(q: HealthInsuranceQuery): Record<string, string> {
@@ -27,6 +28,7 @@ function toParams(q: HealthInsuranceQuery): Record<string, string> {
   if (q.customerType)         p.customerType         = q.customerType;
   if (q.insuranceCompanyName) p.insuranceCompanyName = q.insuranceCompanyName;
   if (q.renewalDays)          p.renewalDays          = String(q.renewalDays);
+  if (q.locationId)           p.locationId           = String(q.locationId);
   return p;
 }
 

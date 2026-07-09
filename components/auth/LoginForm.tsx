@@ -12,10 +12,9 @@ import {
   InputAdornment,
   Checkbox,
   FormControlLabel,
-  Link as MuiLink,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import NextLink from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { loginSchema, LoginFormValues } from '../../lib/validations/login.schema';
 import { useAuth } from '../../hooks/useAuth';
 import LoadingButton from '../ui/LoadingButton';
@@ -24,6 +23,8 @@ import { ApiError } from '../../types/auth.types';
 
 export default function LoginForm() {
   const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const notice = searchParams.get('notice');
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,12 @@ export default function LoginForm() {
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: { xs: 2, sm: 3 } }}>
         Please enter your credentials to access your dashboard.
       </Typography>
+
+      {notice === 'setup_complete' && (
+        <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
+          Setup is already complete. Please sign in.
+        </Alert>
+      )}
 
       {serverError && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
@@ -100,26 +107,16 @@ export default function LoginForm() {
         {...register('password')}
       />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 2, sm: 3 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, sm: 3 } }}>
         <FormControlLabel
           control={<Checkbox size="small" />}
           label={<Typography variant="body2">Remember me</Typography>}
         />
-        <MuiLink component={NextLink} href="/forgot-password" variant="body2" underline="hover">
-          Forgot password?
-        </MuiLink>
       </Box>
 
       <LoadingButton type="submit" variant="contained" fullWidth size="large" loading={loading}>
         Sign In
       </LoadingButton>
-
-      <Typography variant="body2" sx={{ textAlign: 'center', mt: 3, color: 'text.secondary' }}>
-        Don&apos;t have an account?{' '}
-        <MuiLink component={NextLink} href="/register" underline="hover" sx={{ fontWeight: 600 }}>
-          Create account
-        </MuiLink>
-      </Typography>
     </Box>
   );
 }

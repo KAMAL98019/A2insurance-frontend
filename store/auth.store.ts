@@ -16,6 +16,7 @@ interface AuthState {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
+  hydrated: boolean;
   setAuth: (user: AuthUser, token: string) => void;
   clearAuth: () => void;
   hydrate: () => void;
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
+  hydrated: false,
 
   setAuth: (user, token) => {
     localStorage.setItem('access_token', token);
@@ -53,5 +55,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         deleteCookie('access_token');
       }
     }
+    set({ hydrated: true });
   },
 }));

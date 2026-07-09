@@ -17,6 +17,7 @@ import { healthInsuranceApi } from '../../../lib/api/health-insurance';
 import { exportHealthToExcel, exportHealthToCSV } from '../../../lib/export';
 import { parseApiError }       from '../../../lib/parse-error';
 import { useToast }            from '../../../providers/ToastProvider';
+import { useLocationFilterStore } from '../../../store/location-filter.store';
 import HealthInsuranceTable    from '../../../components/health-insurance/HealthInsuranceTable';
 import type { HealthInsuranceRecord, HealthPolicyStatus, HealthPolicyType, HealthCustomerType } from '../../../types/health-insurance.types';
 import { POLICY_STATUS_LABELS, POLICY_TYPE_LABELS } from '../../../types/health-insurance.types';
@@ -26,6 +27,7 @@ const TYPES: HealthPolicyType[] = ['INDIVIDUAL', 'FAMILY_FLOATER', 'SENIOR_CITIZ
 
 function HealthRecordsContent() {
   const { showError, showSuccess } = useToast();
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
 
   const [all,       setAll]       = useState<HealthInsuranceRecord[]>([]);
   const [loading,   setLoading]   = useState(true);
@@ -39,11 +41,12 @@ function HealthRecordsContent() {
   const [exportAnchor,   setExportAnchor]   = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    healthInsuranceApi.getAll()
+    setLoading(true);
+    healthInsuranceApi.getAll({ locationId: selectedLocationId })
       .then(setAll)
       .catch((err) => showError(parseApiError(err)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedLocationId]);
 
   const filtered = useMemo(() => {
     let result = [...all];

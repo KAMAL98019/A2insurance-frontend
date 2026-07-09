@@ -24,17 +24,24 @@ import FireplaceIcon      from '@mui/icons-material/Fireplace';
 import GroupsIcon         from '@mui/icons-material/Groups';
 import BarChartIcon       from '@mui/icons-material/BarChart';
 import TuneIcon           from '@mui/icons-material/Tune';
+import PeopleIcon         from '@mui/icons-material/People';
+import PlaceIcon          from '@mui/icons-material/Place';
 import { usePathname } from 'next/navigation';
 import NextLink from 'next/link';
 import { useState } from 'react';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
+import { canAccessModule } from '../../lib/permissions';
+import type { UserRole } from '../../types/auth.types';
 
 export const SIDEBAR_WIDTH = 256;
 
-interface NavChild { label: string; href: string; icon: React.ReactNode; hidden?: boolean }
+interface NavChild { label: string; href: string; icon: React.ReactNode; hidden?: boolean; roles?: UserRole[] }
 interface NavItem {
   label: string;
   href?: string;
   icon: React.ReactNode;
+  module?: string;
+  roles?: UserRole[];
   children?: NavChild[];
 }
 
@@ -43,6 +50,7 @@ const NAV: NavItem[] = [
   {
     label: 'Vehicle Records',
     icon: <DirectionsCarIcon />,
+    module: 'vehicle-records',
     children: [
       { label: 'Vehicle List',      href: '/vehicle-records',                 icon: <DirectionsCarIcon fontSize="small" /> },
       { label: 'Add Vehicle',       href: '/vehicle-records/add',             icon: <PlaylistAddIcon fontSize="small" /> },
@@ -54,6 +62,7 @@ const NAV: NavItem[] = [
   {
     label: 'Health Insurance',
     icon: <FavoriteIcon />,
+    module: 'health-insurance',
     children: [
       { label: 'Health Records',      href: '/health-records',                  icon: <MedicalServicesIcon fontSize="small" /> },
       { label: 'Add Health Policy',   href: '/health-records/add',              icon: <PlaylistAddIcon fontSize="small" /> },
@@ -66,6 +75,7 @@ const NAV: NavItem[] = [
   {
     label: 'Fire Insurance',
     icon: <LocalFireDepartmentIcon />,
+    module: 'fire-insurance',
     children: [
       { label: 'Fire Records',      href: '/fire-records',                 icon: <FireplaceIcon fontSize="small" /> },
       { label: 'Add Fire Policy',   href: '/fire-records/add',             icon: <PlaylistAddIcon fontSize="small" /> },
@@ -78,6 +88,7 @@ const NAV: NavItem[] = [
   {
     label: 'Labour Insurance',
     icon: <EngineeringIcon />,
+    module: 'labour-insurance',
     children: [
       { label: 'Labour Records',    href: '/labour-records',                 icon: <GroupsIcon fontSize="small" /> },
       { label: 'Add Labour Policy', href: '/labour-records/add',             icon: <PlaylistAddIcon fontSize="small" /> },
@@ -97,15 +108,18 @@ const NAV: NavItem[] = [
       { label: 'Labour Analytics',  href: '/analytics/labour',  icon: <EngineeringIcon fontSize="small" /> },
     ],
   },
-  { label: 'Settings', href: '/settings', icon: <SettingsIcon /> },
+  { label: 'Settings', href: '/settings', icon: <SettingsIcon />, roles: ['SUPER_ADMIN'] },
   {
     label: 'Admin',
     icon: <AdminPanelSettingsIcon />,
+    roles: ['MASTER_ADMIN', 'SUPER_ADMIN'],
     children: [
       { label: 'Manage Categories', href: '/admin/categories',   icon: <CategoryIcon fontSize="small" /> },
       { label: 'Lead Sources',      href: '/admin/lead-sources', icon: <TuneIcon fontSize="small" /> },
     ],
   },
+  { label: 'Users',     href: '/admin/users',     icon: <PeopleIcon />, roles: ['MASTER_ADMIN', 'SUPER_ADMIN'] },
+  { label: 'Locations', href: '/admin/locations', icon: <PlaceIcon />,  roles: ['MASTER_ADMIN'] },
 ];
 
 const btnSx = (active: boolean) => ({
@@ -118,13 +132,23 @@ const btnSx = (active: boolean) => ({
 
 function SidebarContent() {
   const pathname = usePathname();
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    'Vehicle Records': true, 'Health Insurance': true,
-    'Fire Insurance': true, 'Labour Insurance': true, 'Analytics': false,
-  });
+  const user = useCurrentUser();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const toggle = (label: string) =>
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+
+  const visibleNav = NAV
+    .filter((item) => {
+      if (item.roles && (!user || !item.roles.includes(user.role))) return false;
+      if (item.module && !canAccessModule(user, item.module, 'view')) return false;
+      return true;
+    })
+    .map((item) => item.children ? {
+      ...item,
+      children: item.children.filter((c) => !c.roles || (user && c.roles.includes(user.role))),
+    } : item)
+    .filter((item) => !item.children || item.children.length > 0);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#0d1b6e' }}>
@@ -137,7 +161,7 @@ function SidebarContent() {
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
 
       <List sx={{ px: 1, pt: 1.5, flex: 1, overflowY: 'auto' }}>
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           if (item.children) {
             const groupActive = item.children.some((c) => pathname.startsWith(c.href));
             const open = openGroups[item.label] ?? groupActive;

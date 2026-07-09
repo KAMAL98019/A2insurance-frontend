@@ -17,6 +17,7 @@ import { fireInsuranceApi }  from '../../../lib/api/fire-insurance';
 import { exportFireToExcel, exportFireToCSV } from '../../../lib/export';
 import { parseApiError }     from '../../../lib/parse-error';
 import { useToast }          from '../../../providers/ToastProvider';
+import { useLocationFilterStore } from '../../../store/location-filter.store';
 import FireInsuranceTable    from '../../../components/fire-insurance/FireInsuranceTable';
 import type { FireInsuranceRecord, FirePolicyStatus, FireCustomerType } from '../../../types/fire-insurance.types';
 import { FIRE_STATUS_LABELS } from '../../../types/fire-insurance.types';
@@ -25,6 +26,7 @@ const STATUSES: FirePolicyStatus[] = ['ACTIVE', 'EXPIRED', 'PENDING_RENEWAL', 'C
 
 function FireRecordsContent() {
   const { showError, showSuccess } = useToast();
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
 
   const [all,      setAll]      = useState<FireInsuranceRecord[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -37,11 +39,12 @@ function FireRecordsContent() {
   const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    fireInsuranceApi.getAll()
+    setLoading(true);
+    fireInsuranceApi.getAll({ locationId: selectedLocationId })
       .then(setAll)
       .catch((err) => showError(parseApiError(err)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedLocationId]);
 
   const filtered = useMemo(() => {
     let result = [...all];
