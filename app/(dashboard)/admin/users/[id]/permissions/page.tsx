@@ -15,15 +15,14 @@ import type { ModulePermission } from '../../../../../../types/auth.types';
 import { parseApiError } from '../../../../../../lib/parse-error';
 import { useToast }      from '../../../../../../providers/ToastProvider';
 
+// Renewals aren't separate menu items — they're accessed from within their
+// parent record, so they share that module's permission grant instead of
+// needing their own row here.
 const MODULES = [
   { key: 'vehicle-records',  label: 'Vehicle Records' },
   { key: 'health-insurance', label: 'Health Insurance' },
   { key: 'fire-insurance',   label: 'Fire Insurance' },
   { key: 'labour-insurance', label: 'Labour Insurance' },
-  { key: 'renewals',         label: 'Vehicle Renewals' },
-  { key: 'health-renewals',  label: 'Health Renewals' },
-  { key: 'fire-renewals',    label: 'Fire Renewals' },
-  { key: 'labour-renewals',  label: 'Labour Renewals' },
 ];
 
 const ACTIONS: { key: keyof Omit<ModulePermission, 'id' | 'adminUserId' | 'moduleName'>; label: string }[] = [
