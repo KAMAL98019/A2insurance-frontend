@@ -12,18 +12,22 @@ import WarningAmberIcon  from '@mui/icons-material/WarningAmber';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import NextLink from 'next/link';
 import { fireInsuranceApi } from '../../../../lib/api/fire-insurance';
+import { useLocationFilterStore } from '../../../../store/location-filter.store';
+import ProtectedRoute from '../../../../components/auth/ProtectedRoute';
 import type { FireInsuranceStats } from '../../../../types/fire-insurance.types';
 import { SvgBarChart, SvgDonut } from '../../../../components/analytics/SvgBarChart';
 
 const ACCENT = '#e65100';
 
-export default function FireAnalyticsPage() {
+function FireAnalyticsView() {
   const [stats,   setStats]   = useState<FireInsuranceStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
 
   useEffect(() => {
-    fireInsuranceApi.getStats().then(setStats).catch(console.error).finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    fireInsuranceApi.getStats(selectedLocationId).then(setStats).catch(console.error).finally(() => setLoading(false));
+  }, [selectedLocationId]);
 
   const total   = stats?.total          ?? 0;
   const active  = stats?.active         ?? 0;
@@ -122,5 +126,13 @@ export default function FireAnalyticsPage() {
         </Grid>
       )}
     </Box>
+  );
+}
+
+export default function FireAnalyticsPage() {
+  return (
+    <ProtectedRoute allowedRoles={['MASTER_ADMIN', 'SUPER_ADMIN']}>
+      <FireAnalyticsView />
+    </ProtectedRoute>
   );
 }

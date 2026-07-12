@@ -58,9 +58,9 @@ export const healthInsuranceApi = {
       .delete<ApiResponse<HealthInsuranceRecord>>(`/health-insurance/${id}`)
       .then((r) => r.data.data),
 
-  getStats: () =>
+  getStats: (locationId?: number | null) =>
     apiClient
-      .get<ApiResponse<HealthInsuranceStats>>('/health-insurance/stats')
+      .get<ApiResponse<HealthInsuranceStats>>('/health-insurance/stats', { params: locationId ? { locationId } : undefined })
       .then((r) => r.data.data),
 
   getUpcomingRenewals: (days = 30) =>

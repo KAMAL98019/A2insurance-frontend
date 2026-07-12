@@ -13,6 +13,8 @@ import EventBusyIcon      from '@mui/icons-material/EventBusy';
 import AutorenewIcon      from '@mui/icons-material/Autorenew';
 import NextLink           from 'next/link';
 import { dashboardApi }   from '../../../../lib/api/dashboard';
+import { useLocationFilterStore } from '../../../../store/location-filter.store';
+import ProtectedRoute     from '../../../../components/auth/ProtectedRoute';
 import type { DashboardStats, ExpiryAlert } from '../../../../types/vehicle-record.types';
 import { SvgBarChart, SvgDonut } from '../../../../components/analytics/SvgBarChart';
 
@@ -35,13 +37,15 @@ function AlertRowSmall({ alert }: { alert: ExpiryAlert }) {
   );
 }
 
-export default function VehicleAnalyticsPage() {
+function VehicleAnalyticsView() {
   const [stats,   setStats]   = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
 
   useEffect(() => {
-    dashboardApi.getStats().then(setStats).catch(console.error).finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    dashboardApi.getStats(selectedLocationId).then(setStats).catch(console.error).finally(() => setLoading(false));
+  }, [selectedLocationId]);
 
   const total    = stats?.total            ?? 0;
   const expired  = stats?.expired          ?? 0;
@@ -161,5 +165,13 @@ export default function VehicleAnalyticsPage() {
         </Grid>
       )}
     </Box>
+  );
+}
+
+export default function VehicleAnalyticsPage() {
+  return (
+    <ProtectedRoute allowedRoles={['MASTER_ADMIN', 'SUPER_ADMIN']}>
+      <VehicleAnalyticsView />
+    </ProtectedRoute>
   );
 }

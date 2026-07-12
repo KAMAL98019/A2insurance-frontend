@@ -39,6 +39,6 @@ export const labourInsuranceApi = {
   remove: (id: number) =>
     apiClient.delete<ApiResponse<LabourInsuranceRecord>>(`/labour-insurance/${id}`).then((r) => r.data.data),
 
-  getStats: () =>
-    apiClient.get<ApiResponse<LabourInsuranceStats>>('/labour-insurance/stats').then((r) => r.data.data),
+  getStats: (locationId?: number | null) =>
+    apiClient.get<ApiResponse<LabourInsuranceStats>>('/labour-insurance/stats', { params: locationId ? { locationId } : undefined }).then((r) => r.data.data),
 };

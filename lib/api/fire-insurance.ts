@@ -39,6 +39,6 @@ export const fireInsuranceApi = {
   remove: (id: number) =>
     apiClient.delete<ApiResponse<FireInsuranceRecord>>(`/fire-insurance/${id}`).then((r) => r.data.data),
 
-  getStats: () =>
-    apiClient.get<ApiResponse<FireInsuranceStats>>('/fire-insurance/stats').then((r) => r.data.data),
+  getStats: (locationId?: number | null) =>
+    apiClient.get<ApiResponse<FireInsuranceStats>>('/fire-insurance/stats', { params: locationId ? { locationId } : undefined }).then((r) => r.data.data),
 };

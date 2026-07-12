@@ -13,18 +13,22 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import GroupsIcon        from '@mui/icons-material/Groups';
 import NextLink from 'next/link';
 import { labourInsuranceApi } from '../../../../lib/api/labour-insurance';
+import { useLocationFilterStore } from '../../../../store/location-filter.store';
+import ProtectedRoute from '../../../../components/auth/ProtectedRoute';
 import type { LabourInsuranceStats } from '../../../../types/labour-insurance.types';
 import { SvgBarChart, SvgDonut } from '../../../../components/analytics/SvgBarChart';
 
 const ACCENT = '#1b5e20';
 
-export default function LabourAnalyticsPage() {
+function LabourAnalyticsView() {
   const [stats,   setStats]   = useState<LabourInsuranceStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
 
   useEffect(() => {
-    labourInsuranceApi.getStats().then(setStats).catch(console.error).finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    labourInsuranceApi.getStats(selectedLocationId).then(setStats).catch(console.error).finally(() => setLoading(false));
+  }, [selectedLocationId]);
 
   const total   = stats?.total          ?? 0;
   const active  = stats?.active         ?? 0;
@@ -123,5 +127,13 @@ export default function LabourAnalyticsPage() {
         </Grid>
       )}
     </Box>
+  );
+}
+
+export default function LabourAnalyticsPage() {
+  return (
+    <ProtectedRoute allowedRoles={['MASTER_ADMIN', 'SUPER_ADMIN']}>
+      <LabourAnalyticsView />
+    </ProtectedRoute>
   );
 }

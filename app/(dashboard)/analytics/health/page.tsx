@@ -13,18 +13,22 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import NextLink from 'next/link';
 import { healthInsuranceApi } from '../../../../lib/api/health-insurance';
+import { useLocationFilterStore } from '../../../../store/location-filter.store';
+import ProtectedRoute from '../../../../components/auth/ProtectedRoute';
 import type { HealthInsuranceStats } from '../../../../types/health-insurance.types';
 import { SvgBarChart, SvgDonut } from '../../../../components/analytics/SvgBarChart';
 
 const ACCENT = '#c62828';
 
-export default function HealthAnalyticsPage() {
+function HealthAnalyticsView() {
   const [stats,   setStats]   = useState<HealthInsuranceStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
 
   useEffect(() => {
-    healthInsuranceApi.getStats().then(setStats).catch(console.error).finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    healthInsuranceApi.getStats(selectedLocationId).then(setStats).catch(console.error).finally(() => setLoading(false));
+  }, [selectedLocationId]);
 
   const total   = stats?.total          ?? 0;
   const active  = stats?.active         ?? 0;
@@ -123,5 +127,13 @@ export default function HealthAnalyticsPage() {
         </Grid>
       )}
     </Box>
+  );
+}
+
+export default function HealthAnalyticsPage() {
+  return (
+    <ProtectedRoute allowedRoles={['MASTER_ADMIN', 'SUPER_ADMIN']}>
+      <HealthAnalyticsView />
+    </ProtectedRoute>
   );
 }

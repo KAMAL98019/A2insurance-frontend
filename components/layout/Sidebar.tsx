@@ -102,6 +102,7 @@ const NAV: NavItem[] = [
   {
     label: 'Analytics',
     icon: <BarChartIcon />,
+    roles: ['MASTER_ADMIN', 'SUPER_ADMIN'],
     children: [
       { label: 'Vehicle Analytics', href: '/analytics/vehicle', icon: <DirectionsCarIcon fontSize="small" /> },
       { label: 'Health Analytics',  href: '/analytics/health',  icon: <FavoriteIcon fontSize="small" /> },
