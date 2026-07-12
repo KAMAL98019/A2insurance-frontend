@@ -50,7 +50,7 @@ const EMPTY: VehicleRecordFormValues = {
   vehicleNumber: '', ownerName: '', cellNumber: '', cellNumberAlt: '', category: '',
   policyExpiryDate: '', insuranceCompany: '',
   rcDocument: '', insuranceDocument: '', aadhaarDocument: '', panDocument: '', photo: '',
-  odDocument: '', tpDocument: '',
+  odDocument: '', tpDocument: '', remarks: '',
 };
 
 function formatBytes(b: number) {
@@ -116,6 +116,7 @@ export default function VehicleRecordForm({
         photo:             existing.photo              ?? '',
         odDocument:        existing.odDocument         ?? '',
         tpDocument:        existing.tpDocument         ?? '',
+        remarks:           existing.remarks            ?? '',
       };
     }
     if (enableDraft) {
@@ -463,6 +464,11 @@ export default function VehicleRecordForm({
                   options={insuranceCompanies.map((c) => ({ value: c.name, label: c.name }))}
                 />
               )} />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField fullWidth multiline rows={2} label="Remarks"
+              error={!!errors.remarks} helperText={errors.remarks?.message}
+              {...register('remarks')} />
           </Grid>
         </Grid>
       </Paper>

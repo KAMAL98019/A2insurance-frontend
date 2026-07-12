@@ -30,7 +30,6 @@ function HealthRecordsContent() {
   const { showError, showSuccess } = useToast();
   const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
   const canCreate = useCan('health-insurance', 'create');
-  const canExport = useCan('health-insurance', 'export');
 
   const [all,       setAll]       = useState<HealthInsuranceRecord[]>([]);
   const [loading,   setLoading]   = useState(true);
@@ -114,12 +113,10 @@ function HealthRecordsContent() {
             </Box>
           </Box>
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-            {canExport && (
-              <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-                onClick={(e) => setExportAnchor(e.currentTarget)}>
-                Export
-              </Button>
-            )}
+            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+              onClick={(e) => setExportAnchor(e.currentTarget)}>
+              Export
+            </Button>
             {canCreate && (
               <Button variant="contained" size="small" startIcon={<AddIcon />}
                 component={NextLink} href="/health-records/add" disableElevation>

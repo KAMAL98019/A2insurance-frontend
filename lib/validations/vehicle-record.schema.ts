@@ -18,6 +18,7 @@ export const vehicleRecordSchema = z.object({
   photo:             z.string().optional(),
   odDocument:        z.string().optional(),
   tpDocument:        z.string().optional(),
+  remarks:           z.string().optional(),
 });
 
 export type VehicleRecordFormValues = z.infer<typeof vehicleRecordSchema>;

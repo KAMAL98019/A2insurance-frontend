@@ -54,7 +54,13 @@ export function AppNotificationsProvider({ children }: { children: ReactNode }) 
   }, [showSuccess, showError, showToast]);
 
   useEffect(() => {
-    const socket = io(WS_URL, { transports: ['websocket', 'polling'], reconnection: true });
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!token) return;
+
+    // Sent so the backend can join this socket to the right location room(s)
+    // — notifications are then scoped to what this user can actually see,
+    // instead of broadcasting every location's alerts to every role.
+    const socket = io(WS_URL, { transports: ['websocket', 'polling'], reconnection: true, auth: { token } });
     socketRef.current = socket;
 
     socket.on('app:notification', (notif: AppNotif) => addNotif(notif));
@@ -62,13 +68,10 @@ export function AppNotificationsProvider({ children }: { children: ReactNode }) 
     // On connect, request the daily policy summary to populate the bell
     socket.on('connect', () => {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-      if (token) {
-        fetch(`${apiBase}/notifications/push-summary`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
-      }
+      fetch(`${apiBase}/notifications/push-summary`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
     });
 
     return () => { socket.disconnect(); socketRef.current = null; };

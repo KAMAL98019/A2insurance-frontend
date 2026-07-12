@@ -29,7 +29,6 @@ function FireRecordsContent() {
   const { showError, showSuccess } = useToast();
   const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
   const canCreate = useCan('fire-insurance', 'create');
-  const canExport = useCan('fire-insurance', 'export');
 
   const [all,      setAll]      = useState<FireInsuranceRecord[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -101,12 +100,10 @@ function FireRecordsContent() {
             </Box>
           </Box>
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-            {canExport && (
-              <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-                onClick={(e) => setExportAnchor(e.currentTarget)}>
-                Export
-              </Button>
-            )}
+            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+              onClick={(e) => setExportAnchor(e.currentTarget)}>
+              Export
+            </Button>
             {canCreate && (
               <Button variant="contained" size="small" startIcon={<AddIcon />}
                 component={NextLink} href="/fire-records/add" disableElevation>

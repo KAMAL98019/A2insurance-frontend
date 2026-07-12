@@ -42,6 +42,7 @@ export interface VehicleRecord {
   photo: string | null;
   odDocument: string | null;
   tpDocument: string | null;
+  remarks: string | null;
   createdAt: string;
   updatedAt: string;
   renewals?: EmbeddedRenewal[];
@@ -62,6 +63,7 @@ export interface CreateVehicleRecordPayload {
   photo?: string;
   odDocument?: string;
   tpDocument?: string;
+  remarks?: string;
 }
 
 export type UpdateVehicleRecordPayload = Partial<CreateVehicleRecordPayload>;

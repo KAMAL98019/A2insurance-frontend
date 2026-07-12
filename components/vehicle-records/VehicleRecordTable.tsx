@@ -5,39 +5,21 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, IconButton, Tooltip, Chip, Typography, Box, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
-  Menu, MenuItem, ListItemIcon,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import AddIcon from '@mui/icons-material/Add';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckIcon from '@mui/icons-material/Check';
 import NextLink from 'next/link';
 import dayjs from 'dayjs';
-import { renewalsApi } from '../../lib/api/renewals';
+import { vehicleRecordsApi } from '../../lib/api/vehicle-records';
 import { notificationsApi } from '../../lib/api/notifications';
 import { useToast } from '../../providers/ToastProvider';
 import { parseApiError } from '../../lib/parse-error';
 import { useCan } from '../../hooks/useCan';
-import type { VehicleRecord, EmbeddedRenewal, RenewalStatus } from '../../types/vehicle-record.types';
+import type { VehicleRecord } from '../../types/vehicle-record.types';
 import DocumentCell from './DocumentCell';
-
-// ─── Status config ────────────────────────────────────────────────────────────
-
-interface StatusCfg { label: string; color: string; bg: string }
-
-const STATUS: Record<RenewalStatus, StatusCfg> = {
-  CONTACTED: { label: 'Contacted', color: '#1565c0', bg: '#e3f2fd' },
-  DOCS_COLLECTED: { label: 'Docs Collected', color: '#6a1b9a', bg: '#f3e5f5' },
-  PROCESSING: { label: 'Processing', color: '#0277bd', bg: '#e1f5fe' },
-  PAYMENT_PENDING: { label: 'Payment Pending', color: '#e65100', bg: '#fff3e0' },
-  RENEWED: { label: 'Renewed', color: '#2e7d32', bg: '#e8f5e9' },
-  CANCELLED: { label: 'Cancelled', color: '#757575', bg: '#f5f5f5' },
-};
-
-const ALL_STATUSES = Object.entries(STATUS) as [RenewalStatus, StatusCfg][];
+import EditableRemarksCell from '../ui/EditableRemarksCell';
 
 // ─── Category / expiry chips ──────────────────────────────────────────────────
 
@@ -76,124 +58,6 @@ function expiryChip(dateStr: string, now: dayjs.Dayjs) {
   );
 }
 
-// ─── Inline renewal cell ──────────────────────────────────────────────────────
-
-interface RenewalCellProps {
-  vehicleId: number;
-  initial: EmbeddedRenewal | null;
-  canCreate: boolean;
-  canUpdate: boolean;
-}
-
-function RenewalCell({ vehicleId, initial, canCreate, canUpdate }: RenewalCellProps) {
-  const { showError } = useToast();
-  const [renewal, setRenewal] = useState<EmbeddedRenewal | null>(initial);
-  const [busy, setBusy] = useState(false);
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-
-  const startTracking = async () => {
-    setBusy(true);
-    try {
-      const created = await renewalsApi.create({ vehicleRecordId: vehicleId, status: 'CONTACTED' });
-      setRenewal({
-        id: created.id, status: created.status, notes: created.notes,
-        renewedDate: created.renewedDate, createdAt: created.createdAt, updatedAt: created.updatedAt,
-      });
-    } catch (err) {
-      showError(parseApiError(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const changeStatus = async (newStatus: RenewalStatus) => {
-    if (!renewal || newStatus === renewal.status) { setAnchor(null); return; }
-    const prev = renewal;
-    setRenewal((r) => r ? { ...r, status: newStatus } : r); // optimistic
-    setAnchor(null);
-    try {
-      const updated = await renewalsApi.update(renewal.id, { status: newStatus });
-      setRenewal({
-        id: updated.id, status: updated.status, notes: updated.notes,
-        renewedDate: updated.renewedDate, createdAt: updated.createdAt, updatedAt: updated.updatedAt,
-      });
-    } catch (err) {
-      setRenewal(prev); // revert on error
-      showError(parseApiError(err));
-    }
-  };
-
-  // No tracking started yet
-  if (!renewal) {
-    if (!canCreate) return <Typography variant="caption" color="text.disabled">—</Typography>;
-    return (
-      <Button
-        size="small" variant="outlined" startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
-        disabled={busy}
-        onClick={startTracking}
-        sx={{ fontSize: '0.7rem', py: 0.35, px: 1, borderColor: 'divider', color: 'text.secondary', whiteSpace: 'nowrap' }}
-      >
-        Start
-      </Button>
-    );
-  }
-
-  const cfg = STATUS[renewal.status];
-
-  return (
-    <>
-      <Box
-        onClick={(e) => canUpdate && setAnchor(e.currentTarget)}
-        sx={{
-          display: 'inline-flex', alignItems: 'center', gap: 0.5,
-          px: 1.25, py: 0.4,
-          borderRadius: 5,
-          bgcolor: cfg.bg,
-          border: `1px solid ${cfg.color}30`,
-          color: cfg.color,
-          fontSize: '0.7rem', fontWeight: 700,
-          cursor: canUpdate ? 'pointer' : 'default',
-          userSelect: 'none',
-          whiteSpace: 'nowrap',
-          transition: 'filter 0.15s',
-          '&:hover': canUpdate ? { filter: 'brightness(0.95)' } : {},
-        }}
-      >
-        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: cfg.color, flexShrink: 0 }} />
-        {cfg.label}
-        {canUpdate && <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />}
-      </Box>
-
-      <Menu
-        anchorEl={anchor}
-        open={Boolean(anchor)}
-        onClose={() => setAnchor(null)}
-        slotProps={{ paper: { sx: { borderRadius: 2, boxShadow: 4, minWidth: 180 } } }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-      >
-        <Typography variant="caption" sx={{ px: 2, pt: 1, pb: 0.5, display: 'block', color: 'text.disabled', fontWeight: 600, letterSpacing: 0.5 }}>
-          CHANGE STATUS
-        </Typography>
-        {ALL_STATUSES.map(([val, c]) => (
-          <MenuItem
-            key={val}
-            selected={val === renewal.status}
-            onClick={() => changeStatus(val)}
-            sx={{ py: 0.75, fontSize: '0.8rem' }}
-          >
-            <ListItemIcon sx={{ minWidth: 28 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: c.color }} />
-            </ListItemIcon>
-            <Typography variant="body2" sx={{ fontWeight: val === renewal.status ? 700 : 400 }}>
-              {c.label}
-            </Typography>
-            {val === renewal.status && <CheckIcon sx={{ fontSize: 14, ml: 'auto', color: c.color }} />}
-          </MenuItem>
-        ))}
-      </Menu>
-    </>
-  );
-}
 
 // ─── Main table ───────────────────────────────────────────────────────────────
 
@@ -207,7 +71,6 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
   const { showSuccess, showError } = useToast();
   const canUpdate = useCan('vehicle-records', 'update');
   const canDelete = useCan('vehicle-records', 'delete');
-  const canCreate = useCan('vehicle-records', 'create');
   const [now, setNow] = useState<dayjs.Dayjs | null>(null);
   const [waTarget, setWaTarget] = useState<VehicleRecord | null>(null);
   const [waPhone, setWaPhone] = useState('');
@@ -332,7 +195,7 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
         <Table size="small" sx={{ minWidth: 900 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: 'grey.50' }}>
-              {['S.No', 'Vehicle No.', 'Owner Details', 'Category', 'Policy Expiry', 'Insurance Co.', 'Documents', 'Tracking', 'Actions'].map((h) => (
+              {['S.No', 'Vehicle No.', 'Owner Details', 'Category', 'Policy Expiry', 'Insurance Co.', 'Documents', 'Remarks', 'Actions'].map((h) => (
                 <TableCell key={h} sx={{ fontWeight: 700, whiteSpace: 'nowrap', py: 1.5 }}>{h}</TableCell>
               ))}
             </TableRow>
@@ -369,13 +232,11 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
 
                 <TableCell><DocumentCell record={r} /></TableCell>
 
-                {/* ── Inline renewal status ── */}
-                <TableCell sx={{ py: 1 }}>
-                  <RenewalCell
-                    vehicleId={r.id}
-                    initial={r.renewals?.[0] ?? null}
-                    canCreate={canCreate}
-                    canUpdate={canUpdate}
+                <TableCell>
+                  <EditableRemarksCell
+                    value={r.remarks}
+                    canEdit={canUpdate}
+                    onSave={(value) => vehicleRecordsApi.update(r.id, { remarks: value })}
                   />
                 </TableCell>
 

@@ -1,119 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  IconButton, Tooltip, Skeleton, Chip, Typography, Box, CircularProgress,
-  Button, Menu, MenuItem, ListItemIcon, Popover, Divider,
+  IconButton, Tooltip, Skeleton, Chip, Typography, Box,
+  Popover, Divider,
 } from '@mui/material';
-import VisibilityIcon  from '@mui/icons-material/Visibility';
-import EditIcon        from '@mui/icons-material/Edit';
-import DeleteIcon      from '@mui/icons-material/Delete';
-import AddIcon         from '@mui/icons-material/Add';
-import ExpandMoreIcon  from '@mui/icons-material/ExpandMore';
-import CheckIcon       from '@mui/icons-material/Check';
-import FolderOpenIcon  from '@mui/icons-material/FolderOpen';
-import FolderOffIcon   from '@mui/icons-material/FolderOff';
-import ArticleIcon     from '@mui/icons-material/Article';
-import OpenInNewIcon   from '@mui/icons-material/OpenInNew';
-import PeopleIcon      from '@mui/icons-material/People';
-import NextLink        from 'next/link';
-import { labourRenewalsApi }  from '../../lib/api/labour-renewals';
-import { useToast }           from '../../providers/ToastProvider';
-import { parseApiError }      from '../../lib/parse-error';
-import { useCan }             from '../../hooks/useCan';
-import type { LabourInsuranceRecord, EmbeddedLabourRenewal, LabourRenewalStatus, LabourPolicyStatus } from '../../types/labour-insurance.types';
-import { LABOUR_STATUS_LABELS, LABOUR_STATUS_COLORS, LABOUR_POLICY_TYPE_LABELS } from '../../types/labour-insurance.types';
-
-// ─── Renewal status config ────────────────────────────────────────────────────
-
-interface StatusCfg { label: string; color: string; bg: string }
-const RENEWAL_STATUS: Record<LabourRenewalStatus, StatusCfg> = {
-  CONTACTED:       { label: 'Contacted',       color: '#1565c0', bg: '#e3f2fd' },
-  DOCS_COLLECTED:  { label: 'Docs Collected',  color: '#6a1b9a', bg: '#f3e5f5' },
-  PROCESSING:      { label: 'Processing',      color: '#0277bd', bg: '#e1f5fe' },
-  PAYMENT_PENDING: { label: 'Payment Pending', color: '#e65100', bg: '#fff3e0' },
-  RENEWED:         { label: 'Renewed',         color: '#2e7d32', bg: '#e8f5e9' },
-  CANCELLED:       { label: 'Cancelled',       color: '#757575', bg: '#f5f5f5' },
-};
-const ALL_STATUSES = Object.entries(RENEWAL_STATUS) as [LabourRenewalStatus, StatusCfg][];
-
-// ─── Inline renewal cell ──────────────────────────────────────────────────────
-
-function LabourRenewalCell({ labourId, initial, canCreate, canUpdate }: { labourId: number; initial: EmbeddedLabourRenewal | null; canCreate: boolean; canUpdate: boolean }) {
-  const { showError } = useToast();
-  const [renewal, setRenewal] = useState<EmbeddedLabourRenewal | null>(initial);
-  const [busy,    setBusy]    = useState(false);
-  const [anchor,  setAnchor]  = useState<HTMLElement | null>(null);
-
-  const startTracking = async () => {
-    setBusy(true);
-    try {
-      const c = await labourRenewalsApi.create({ labourInsuranceId: labourId, status: 'CONTACTED' });
-      setRenewal({ id: c.id, status: c.status, notes: c.notes, renewedDate: c.renewedDate, createdAt: c.createdAt, updatedAt: c.updatedAt });
-    } catch (err) { showError(parseApiError(err)); }
-    finally { setBusy(false); }
-  };
-
-  const changeStatus = async (s: LabourRenewalStatus) => {
-    if (!renewal || s === renewal.status) { setAnchor(null); return; }
-    const prev = renewal;
-    setRenewal((r) => r ? { ...r, status: s } : r);
-    setAnchor(null);
-    try {
-      const u = await labourRenewalsApi.update(renewal.id, { status: s });
-      setRenewal({ id: u.id, status: u.status, notes: u.notes, renewedDate: u.renewedDate, createdAt: u.createdAt, updatedAt: u.updatedAt });
-    } catch (err) { setRenewal(prev); showError(parseApiError(err)); }
-  };
-
-  if (!renewal) {
-    if (!canCreate) return <Typography variant="caption" color="text.disabled">—</Typography>;
-    return (
-      <Button size="small" variant="outlined"
-        startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
-        disabled={busy} onClick={startTracking}
-        sx={{ fontSize: '0.7rem', py: 0.35, px: 1, borderColor: 'divider', color: 'text.secondary', whiteSpace: 'nowrap' }}>
-        Start
-      </Button>
-    );
-  }
-
-  const cfg = RENEWAL_STATUS[renewal.status];
-  return (
-    <>
-      <Box onClick={(e) => canUpdate && setAnchor(e.currentTarget)}
-        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1.25, py: 0.4, borderRadius: 5,
-          bgcolor: cfg.bg, border: `1px solid ${cfg.color}30`, color: cfg.color,
-          fontSize: '0.7rem', fontWeight: 700, cursor: canUpdate ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap',
-          transition: 'filter 0.15s', '&:hover': canUpdate ? { filter: 'brightness(0.95)' } : {} }}>
-        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: cfg.color, flexShrink: 0 }} />
-        {cfg.label}
-        {canUpdate && <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />}
-      </Box>
-      <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}
-        slotProps={{ paper: { sx: { borderRadius: 2, boxShadow: 4, minWidth: 180 } } }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}>
-        <Typography variant="caption" sx={{ px: 2, pt: 1, pb: 0.5, display: 'block', color: 'text.disabled', fontWeight: 600, letterSpacing: 0.5 }}>
-          CHANGE STATUS
-        </Typography>
-        {ALL_STATUSES.map(([val, c]) => (
-          <MenuItem key={val} selected={val === renewal.status} onClick={() => changeStatus(val)} sx={{ py: 0.75 }}>
-            <ListItemIcon sx={{ minWidth: 28 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: c.color }} />
-            </ListItemIcon>
-            <Typography variant="body2" sx={{ fontWeight: val === renewal.status ? 700 : 400 }}>{c.label}</Typography>
-            {val === renewal.status && <CheckIcon sx={{ fontSize: 14, ml: 'auto', color: c.color }} />}
-          </MenuItem>
-        ))}
-      </Menu>
-    </>
-  );
-}
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import FolderOffIcon from '@mui/icons-material/FolderOff';
+import ArticleIcon from '@mui/icons-material/Article';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import PeopleIcon from '@mui/icons-material/People';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import NextLink from 'next/link';
+import dayjs from 'dayjs';
+import { labourInsuranceApi } from '../../lib/api/labour-insurance';
+import { notificationsApi } from '../../lib/api/notifications';
+import { useCan } from '../../hooks/useCan';
+import WhatsAppSendDialog, { WaLang } from '../notifications/WhatsAppSendDialog';
+import type { LabourInsuranceRecord } from '../../types/labour-insurance.types';
+import { LABOUR_POLICY_TYPE_LABELS } from '../../types/labour-insurance.types';
+import EditableRemarksCell from '../ui/EditableRemarksCell';
 
 // ─── Document cell ────────────────────────────────────────────────────────────
 
 function LabourDocCell({ record }: { record: LabourInsuranceRecord }) {
-  const [anchor,   setAnchor]   = useState<HTMLElement | null>(null);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [thumbErr, setThumbErr] = useState(false);
   const url = record.policyDocument;
   const isPdf = !!url && (url.endsWith('.pdf') || url.includes('/raw/upload/'));
@@ -145,11 +60,15 @@ function LabourDocCell({ record }: { record: LabourInsuranceRecord }) {
               const open = isPdf ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/upload/pdf?url=${encodeURIComponent(url)}` : url;
               window.open(open, '_blank', 'noopener,noreferrer');
             }}
-            sx={{ width: 88, border: '1px solid', borderColor: !url ? 'grey.200' : 'primary.200', borderRadius: 2,
+            sx={{
+              width: 88, border: '1px solid', borderColor: !url ? 'grey.200' : 'primary.200', borderRadius: 2,
               overflow: 'hidden', opacity: url ? 1 : 0.45, cursor: url ? 'pointer' : 'default',
-              '&:hover': url ? { boxShadow: 4, transform: 'translateY(-2px)' } : {} }}>
-            <Box sx={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              bgcolor: !url ? 'grey.100' : isPdf && (thumbErr || !thumbUrl) ? 'error.50' : 'primary.50', overflow: 'hidden' }}>
+              '&:hover': url ? { boxShadow: 4, transform: 'translateY(-2px)' } : {}
+            }}>
+            <Box sx={{
+              height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: !url ? 'grey.100' : isPdf && (thumbErr || !thumbUrl) ? 'error.50' : 'primary.50', overflow: 'hidden'
+            }}>
               {!url ? <FolderOffIcon sx={{ fontSize: 28, color: 'grey.400' }} />
                 : isPdf && thumbUrl && !thumbErr ? (
                   <Box component="img" src={thumbUrl} alt="Policy" loading="lazy" onError={() => setThumbErr(true)}
@@ -176,15 +95,6 @@ function LabourDocCell({ record }: { record: LabourInsuranceRecord }) {
   );
 }
 
-// ─── Status chip ─────────────────────────────────────────────────────────────
-
-function StatusChip({ status }: { status: LabourPolicyStatus }) {
-  return (
-    <Chip label={LABOUR_STATUS_LABELS[status]} size="small" variant="outlined"
-      sx={{ borderColor: LABOUR_STATUS_COLORS[status], color: LABOUR_STATUS_COLORS[status], borderWidth: 1.5, fontWeight: 600, fontSize: '0.72rem' }} />
-  );
-}
-
 function fmtAmount(v: string | number | null) {
   if (v === null || v === undefined) return '—';
   const n = typeof v === 'string' ? parseFloat(v) : v;
@@ -195,11 +105,11 @@ function expiryChip(dateStr: string) {
   const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000);
   const date = new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   let status: string; let color: string; let bg: string;
-  if (diff < 0)        { status = 'Expired';                                 color = '#c62828'; bg = '#ffebee'; }
-  else if (diff === 0) { status = 'Expires Today';                           color = '#c62828'; bg = '#ffebee'; }
-  else if (diff <= 7)  { status = `${diff} day${diff > 1 ? 's' : ''} left`; color = '#e65100'; bg = '#fff3e0'; }
-  else if (diff <= 30) { status = `${diff} days left`;                       color = '#1565c0'; bg = '#e3f2fd'; }
-  else                 { status = 'Active';                                   color = '#2e7d32'; bg = '#e8f5e9'; }
+  if (diff < 0) { status = 'Expired'; color = '#c62828'; bg = '#ffebee'; }
+  else if (diff === 0) { status = 'Expires Today'; color = '#c62828'; bg = '#ffebee'; }
+  else if (diff <= 7) { status = `${diff} day${diff > 1 ? 's' : ''} left`; color = '#e65100'; bg = '#fff3e0'; }
+  else if (diff <= 30) { status = `${diff} days left`; color = '#1565c0'; bg = '#e3f2fd'; }
+  else { status = 'Active'; color = '#2e7d32'; bg = '#e8f5e9'; }
   return (
     <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.4 }}>
       <Box sx={{ px: 1, py: 0.2, borderRadius: 1, bgcolor: bg, color, fontSize: '0.67rem', fontWeight: 700, border: `1px solid ${color}30`, whiteSpace: 'nowrap' }}>
@@ -212,14 +122,57 @@ function expiryChip(dateStr: string) {
 
 // ─── Main table ───────────────────────────────────────────────────────────────
 
-const HEADERS = ['Policy No.', 'Company Name', 'Insurer', 'Mobile', 'Policy Type', 'Employees', 'Total Premium', 'Expiry Date', 'Renewal Date', 'Status', 'Document', 'Tracking', 'Actions'];
+const HEADERS = ['Policy No.', 'Company Name', 'Insurer', 'Mobile', 'Policy Type', 'Employees', 'Total Premium', 'Expiry Date', 'Renewal Date', 'Document', 'Remarks', 'Actions'];
 
 interface Props { records: LabourInsuranceRecord[]; loading: boolean; onDelete: (id: number) => void }
 
 export default function LabourInsuranceTable({ records, loading, onDelete }: Props) {
   const canUpdate = useCan('labour-insurance', 'update');
   const canDelete = useCan('labour-insurance', 'delete');
-  const canCreate = useCan('labour-insurance', 'create');
+
+  const [waTarget, setWaTarget] = useState<LabourInsuranceRecord | null>(null);
+  const [contactSettings, setContactSettings] = useState({ name: '', phone: '', address: '' });
+
+  useEffect(() => {
+    notificationsApi.getSettings().then((s) => {
+      setContactSettings({ name: s.contactName ?? '', phone: s.contactPhone ?? '', address: s.contactAddress ?? '' });
+    }).catch(() => { });
+  }, []);
+
+  const buildFooter = () => {
+    const lines = [
+      contactSettings.phone ? `📞 ${contactSettings.phone}` : '',
+      contactSettings.address ? `📍 ${contactSettings.address}` : '',
+      contactSettings.name || 'A2 Insurance Care',
+    ].filter(Boolean);
+    return `\n\n${lines.join('\n')}`;
+  };
+
+  const buildWaMessage = (r: LabourInsuranceRecord, lang: WaLang) => {
+    const exp = dayjs(r.renewalDate).format('DD MMM YYYY');
+    const diff = dayjs(r.renewalDate).diff(dayjs(), 'day');
+    const isTamil = lang === 'tamil';
+    const footer = buildFooter();
+
+    if (diff < 0) {
+      return isTamil
+        ? `அன்புள்ள ${r.insuredName},\n\n⚠️ உங்கள் தொழிலாளர் காப்பீடு (*${r.policyNumber}*) ${exp} அன்று *காலாவதியாகிவிட்டது*.\n\nதாமதிக்காமல் புதுப்பிக்கவும்.${footer}`
+        : `Dear ${r.insuredName},\n\n⚠️ Your labour insurance policy (*${r.policyNumber}*) has *EXPIRED* on ${exp}.\n\nPlease renew immediately to avoid a coverage gap.${footer}`;
+    }
+    if (diff <= 7) {
+      return isTamil
+        ? `அன்புள்ள ${r.insuredName},\n\n🚨 *அவசரம்!* உங்கள் தொழிலாளர் காப்பீடு (*${r.policyNumber}*) வெறும் *${diff} நாட்களில்* (${exp}) புதுப்பிக்க வேண்டும்.\n\nதாமதிக்காமல் இப்போதே தொடர்பு கொள்ளவும்.${footer}`
+        : `Dear ${r.insuredName},\n\n🚨 *URGENT!* Your labour insurance policy (*${r.policyNumber}*) renewal is due in just *${diff} days* (${exp}).\n\nPlease contact us immediately.${footer}`;
+    }
+    if (diff <= 15) {
+      return isTamil
+        ? `அன்புள்ள ${r.insuredName},\n\n🔔 நினைவூட்டல்: உங்கள் தொழிலாளர் காப்பீடு (*${r.policyNumber}*) *${diff} நாட்களில்* (${exp}) புதுப்பிக்க வேண்டும்.\n\nசீக்கிரமே புதுப்பிக்கவும்.${footer}`
+        : `Dear ${r.insuredName},\n\n🔔 Reminder: Your labour insurance policy (*${r.policyNumber}*) renewal is due in *${diff} days* (${exp}).\n\nPlease renew soon.${footer}`;
+    }
+    return isTamil
+      ? `அன்புள்ள ${r.insuredName},\n\n📋 முன்னறிவிப்பு: உங்கள் தொழிலாளர் காப்பீடு (*${r.policyNumber}*) *${diff} நாட்களில்* (${exp}) புதுப்பிக்க வேண்டும்.\n\nசமயத்தில் புதுப்பிக்க திட்டமிடவும்.${footer}`
+      : `Dear ${r.insuredName},\n\n📋 Advance Notice: Your labour insurance policy (*${r.policyNumber}*) renewal is due in *${diff} days* (${exp}).\n\nPlease plan for renewal in advance.${footer}`;
+  };
 
   if (loading) return (
     <TableContainer>
@@ -237,82 +190,99 @@ export default function LabourInsuranceTable({ records, loading, onDelete }: Pro
   );
 
   return (
-    <TableContainer sx={{ overflowX: 'auto' }}>
-      <Table size="small">
-        <TableHead>
-          <TableRow sx={{ '& th': { bgcolor: 'grey.50' } }}>
-            {HEADERS.map((h, i) => (
-              <TableCell key={h} align={i === HEADERS.length - 1 ? 'right' : 'left'} sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{h}</TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {records.map((r) => {
-            const renewalDate = r.renewalDate ? new Date(r.renewalDate) : null;
-            const today = new Date();
-            const daysLeft = renewalDate ? Math.ceil((renewalDate.getTime() - today.getTime()) / 86_400_000) : null;
-            const renewalUrgent = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
-            return (
-              <TableRow key={r.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.policyNumber}</TableCell>
-                <TableCell sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{r.insuredName}</TableCell>
-                <TableCell sx={{ whiteSpace: 'nowrap', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.insuranceCompanyName}</TableCell>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.mobileNumber}</TableCell>
-                <TableCell>
-                  {r.labourPolicyType ? (
-                    <Chip label={LABOUR_POLICY_TYPE_LABELS[r.labourPolicyType]} size="small"
-                      color={r.labourPolicyType === 'NAMED' ? 'info' : 'default'}
-                      sx={{ fontSize: '0.7rem', fontWeight: 600 }} />
-                  ) : '—'}
-                </TableCell>
-                <TableCell>
-                  {r.numberOfEmployees != null ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <PeopleIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                      <Typography variant="body2">{r.numberOfEmployees}</Typography>
+    <>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ '& th': { bgcolor: 'grey.50' } }}>
+              {HEADERS.map((h, i) => (
+                <TableCell key={h} align={i === HEADERS.length - 1 ? 'right' : 'left'} sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{h}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {records.map((r) => {
+              const renewalDate = r.renewalDate ? new Date(r.renewalDate) : null;
+              const today = new Date();
+              const daysLeft = renewalDate ? Math.ceil((renewalDate.getTime() - today.getTime()) / 86_400_000) : null;
+              const renewalUrgent = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
+              return (
+                <TableRow key={r.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.policyNumber}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{r.insuredName}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.insuranceCompanyName}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.mobileNumber}</TableCell>
+                  <TableCell>
+                    {r.labourPolicyType ? (
+                      <Chip label={LABOUR_POLICY_TYPE_LABELS[r.labourPolicyType]} size="small"
+                        color={r.labourPolicyType === 'NAMED' ? 'info' : 'default'}
+                        sx={{ fontSize: '0.7rem', fontWeight: 600 }} />
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell>
+                    {r.numberOfEmployees != null ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <PeopleIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        <Typography variant="body2">{r.numberOfEmployees}</Typography>
+                      </Box>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{fmtAmount(r.totalPremium)}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.policyEndDate ? expiryChip(r.policyEndDate) : '—'}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    <Box>
+                      <Typography variant="body2">{renewalDate ? renewalDate.toLocaleDateString('en-IN') : '—'}</Typography>
+                      {renewalUrgent && daysLeft !== null && (
+                        <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
+                          {daysLeft === 0 ? 'Today' : `${daysLeft}d left`}
+                        </Typography>
+                      )}
+                      {daysLeft !== null && daysLeft < 0 && (
+                        <Typography variant="caption" color="error.main" sx={{ fontWeight: 600 }}>Overdue</Typography>
+                      )}
                     </Box>
-                  ) : '—'}
-                </TableCell>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{fmtAmount(r.totalPremium)}</TableCell>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.policyEndDate ? expiryChip(r.policyEndDate) : '—'}</TableCell>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                  <Box>
-                    <Typography variant="body2">{renewalDate ? renewalDate.toLocaleDateString('en-IN') : '—'}</Typography>
-                    {renewalUrgent && daysLeft !== null && (
-                      <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
-                        {daysLeft === 0 ? 'Today' : `${daysLeft}d left`}
-                      </Typography>
-                    )}
-                    {daysLeft !== null && daysLeft < 0 && (
-                      <Typography variant="caption" color="error.main" sx={{ fontWeight: 600 }}>Overdue</Typography>
-                    )}
-                  </Box>
-                </TableCell>
-                <TableCell><StatusChip status={r.policyStatus} /></TableCell>
-                <TableCell><LabourDocCell record={r} /></TableCell>
-                <TableCell sx={{ py: 1 }}>
-                  <LabourRenewalCell labourId={r.id} initial={r.renewals?.[0] ?? null} canCreate={canCreate} canUpdate={canUpdate} />
-                </TableCell>
-                <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                  <Tooltip title="View">
-                    <IconButton size="small" component={NextLink} href={`/labour-records/${r.id}`}><VisibilityIcon fontSize="small" /></IconButton>
-                  </Tooltip>
-                  {canUpdate && (
-                    <Tooltip title="Edit">
-                      <IconButton size="small" component={NextLink} href={`/labour-records/${r.id}/edit`}><EditIcon fontSize="small" /></IconButton>
+                  </TableCell>
+                  <TableCell><LabourDocCell record={r} /></TableCell>
+                  <TableCell>
+                    <EditableRemarksCell
+                      value={r.remarks}
+                      canEdit={canUpdate}
+                      onSave={(value) => labourInsuranceApi.update(r.id, { remarks: value })}
+                    />
+                  </TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                    <Tooltip title="View">
+                      <IconButton size="small" component={NextLink} href={`/labour-records/${r.id}`}><VisibilityIcon fontSize="small" /></IconButton>
                     </Tooltip>
-                  )}
-                  {canDelete && (
-                    <Tooltip title="Delete">
-                      <IconButton size="small" color="error" onClick={() => onDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
+                    {canUpdate && (
+                      <Tooltip title="Edit">
+                        <IconButton size="small" component={NextLink} href={`/labour-records/${r.id}/edit`}><EditIcon fontSize="small" /></IconButton>
+                      </Tooltip>
+                    )}
+                    <Tooltip title="Send WhatsApp">
+                      <IconButton size="small" color="success" onClick={() => setWaTarget(r)}><WhatsAppIcon fontSize="small" /></IconButton>
                     </Tooltip>
-                  )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+                    {canDelete && (
+                      <Tooltip title="Delete">
+                        <IconButton size="small" color="error" onClick={() => onDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
+                      </Tooltip>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <WhatsAppSendDialog<LabourInsuranceRecord>
+        target={waTarget}
+        onClose={() => setWaTarget(null)}
+        titleLabel={(t) => `${t.insuredName} — ${t.policyNumber}`}
+        getPhone={(t) => t.mobileNumber}
+        buildMessage={buildWaMessage}
+        sendPayloadKey="labourInsuranceId"
+      />
+    </>
   );
 }

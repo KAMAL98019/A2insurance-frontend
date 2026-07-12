@@ -60,7 +60,10 @@ export interface NotifStats {
 }
 
 export interface SendManualPayload {
-  mobileNumber:    string;
-  message:         string;
-  vehicleRecordId?: number;
+  mobileNumber:      string;
+  message:           string;
+  vehicleRecordId?:  number;
+  healthInsuranceId?: number;
+  fireInsuranceId?:  number;
+  labourInsuranceId?: number;
 }

@@ -5,6 +5,11 @@ import type { HealthInsuranceRecord } from '../types/health-insurance.types';
 import type { FireInsuranceRecord } from '../types/fire-insurance.types';
 import type { LabourInsuranceRecord } from '../types/labour-insurance.types';
 
+function withDate(filename: string): string {
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return `${filename}-${date}`;
+}
+
 const NOTIF_TYPE_LABEL: Record<string, string> = {
   EXPIRY_30:    '30-Day Alert',
   EXPIRY_15:    '15-Day Alert',
@@ -37,7 +42,7 @@ export function exportLogsToExcel(logs: NotificationLog[], filename = 'notificat
     { wch: 14 }, { wch: 16 }, { wch: 10 }, { wch: 60 },
   ];
   XLSX.utils.book_append_sheet(wb, ws, 'Notification Logs');
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+  XLSX.writeFile(wb, `${withDate(filename)}.xlsx`);
 }
 
 export function exportLogsToCSV(logs: NotificationLog[], filename = 'notification-logs') {
@@ -49,7 +54,7 @@ export function exportLogsToCSV(logs: NotificationLog[], filename = 'notificatio
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `${filename}.csv`;
+  a.download = `${withDate(filename)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -68,6 +73,7 @@ function toRow(r: VehicleRecord, idx: number) {
     'Aadhaar Doc':       r.aadhaarDocument   ?? '',
     'PAN Doc':           r.panDocument       ?? '',
     'Photo':             r.photo             ?? '',
+    'Remarks':           r.remarks           ?? '',
     'Created At':        new Date(r.createdAt).toLocaleDateString('en-IN'),
   };
 }
@@ -81,11 +87,11 @@ export function exportToExcel(records: VehicleRecord[], filename = 'vehicle-reco
   ws['!cols'] = [
     { wch: 6 }, { wch: 16 }, { wch: 22 }, { wch: 18 }, { wch: 12 },
     { wch: 16 }, { wch: 22 }, { wch: 40 }, { wch: 40 }, { wch: 40 },
-    { wch: 40 }, { wch: 40 }, { wch: 14 },
+    { wch: 40 }, { wch: 40 }, { wch: 30 }, { wch: 14 },
   ];
 
   XLSX.utils.book_append_sheet(wb, ws, 'Vehicle Records');
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+  XLSX.writeFile(wb, `${withDate(filename)}.xlsx`);
 }
 
 export function exportToCSV(records: VehicleRecord[], filename = 'vehicle-records') {
@@ -96,7 +102,7 @@ export function exportToCSV(records: VehicleRecord[], filename = 'vehicle-record
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `${filename}.csv`;
+  a.download = `${withDate(filename)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -144,7 +150,7 @@ export function exportHealthToExcel(records: HealthInsuranceRecord[], filename =
     { wch: 18 }, { wch: 16 }, { wch: 28 }, { wch: 14 },
   ];
   XLSX.utils.book_append_sheet(wb, ws, 'Health Insurance');
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+  XLSX.writeFile(wb, `${withDate(filename)}.xlsx`);
 }
 
 export function exportHealthToCSV(records: HealthInsuranceRecord[], filename = 'health-insurance') {
@@ -155,7 +161,7 @@ export function exportHealthToCSV(records: HealthInsuranceRecord[], filename = '
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `${filename}.csv`;
+  a.download = `${withDate(filename)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -208,7 +214,7 @@ export function exportFireToExcel(records: FireInsuranceRecord[], filename = 'fi
     { wch: 16 }, { wch: 28 }, { wch: 14 },
   ];
   XLSX.utils.book_append_sheet(wb, ws, 'Fire Insurance');
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+  XLSX.writeFile(wb, `${withDate(filename)}.xlsx`);
 }
 
 export function exportFireToCSV(records: FireInsuranceRecord[], filename = 'fire-insurance') {
@@ -219,7 +225,7 @@ export function exportFireToCSV(records: FireInsuranceRecord[], filename = 'fire
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `${filename}.csv`;
+  a.download = `${withDate(filename)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -273,7 +279,7 @@ export function exportLabourToExcel(records: LabourInsuranceRecord[], filename =
     { wch: 14 }, { wch: 16 }, { wch: 28 }, { wch: 14 },
   ];
   XLSX.utils.book_append_sheet(wb, ws, 'Labour Insurance');
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+  XLSX.writeFile(wb, `${withDate(filename)}.xlsx`);
 }
 
 export function exportLabourToCSV(records: LabourInsuranceRecord[], filename = 'labour-insurance') {
@@ -284,7 +290,7 @@ export function exportLabourToCSV(records: LabourInsuranceRecord[], filename = '
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `${filename}.csv`;
+  a.download = `${withDate(filename)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

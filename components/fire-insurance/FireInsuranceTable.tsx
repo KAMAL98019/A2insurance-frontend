@@ -1,113 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  IconButton, Tooltip, Skeleton, Chip, Typography, Box, CircularProgress,
-  Button, Menu, MenuItem, ListItemIcon, Popover, Divider,
+  IconButton, Tooltip, Skeleton, Chip, Typography, Box,
+  Popover, Divider,
 } from '@mui/material';
 import VisibilityIcon  from '@mui/icons-material/Visibility';
 import EditIcon        from '@mui/icons-material/Edit';
 import DeleteIcon      from '@mui/icons-material/Delete';
-import AddIcon         from '@mui/icons-material/Add';
-import ExpandMoreIcon  from '@mui/icons-material/ExpandMore';
-import CheckIcon       from '@mui/icons-material/Check';
 import FolderOpenIcon  from '@mui/icons-material/FolderOpen';
 import FolderOffIcon   from '@mui/icons-material/FolderOff';
 import ArticleIcon     from '@mui/icons-material/Article';
 import OpenInNewIcon   from '@mui/icons-material/OpenInNew';
+import WhatsAppIcon    from '@mui/icons-material/WhatsApp';
 import NextLink        from 'next/link';
-import { fireRenewalsApi }    from '../../lib/api/fire-renewals';
-import { useToast }           from '../../providers/ToastProvider';
-import { parseApiError }      from '../../lib/parse-error';
+import dayjs from 'dayjs';
+import { fireInsuranceApi }   from '../../lib/api/fire-insurance';
+import { notificationsApi }   from '../../lib/api/notifications';
 import { useCan }             from '../../hooks/useCan';
-import type { FireInsuranceRecord, EmbeddedFireRenewal, FireRenewalStatus, FirePolicyStatus } from '../../types/fire-insurance.types';
-import { FIRE_STATUS_LABELS, FIRE_STATUS_COLORS } from '../../types/fire-insurance.types';
-
-// ─── Renewal status config ────────────────────────────────────────────────────
-
-interface StatusCfg { label: string; color: string; bg: string }
-const RENEWAL_STATUS: Record<FireRenewalStatus, StatusCfg> = {
-  CONTACTED:       { label: 'Contacted',       color: '#1565c0', bg: '#e3f2fd' },
-  DOCS_COLLECTED:  { label: 'Docs Collected',  color: '#6a1b9a', bg: '#f3e5f5' },
-  PROCESSING:      { label: 'Processing',      color: '#0277bd', bg: '#e1f5fe' },
-  PAYMENT_PENDING: { label: 'Payment Pending', color: '#e65100', bg: '#fff3e0' },
-  RENEWED:         { label: 'Renewed',         color: '#2e7d32', bg: '#e8f5e9' },
-  CANCELLED:       { label: 'Cancelled',       color: '#757575', bg: '#f5f5f5' },
-};
-const ALL_STATUSES = Object.entries(RENEWAL_STATUS) as [FireRenewalStatus, StatusCfg][];
-
-// ─── Inline renewal cell ──────────────────────────────────────────────────────
-
-function FireRenewalCell({ fireId, initial, canCreate, canUpdate }: { fireId: number; initial: EmbeddedFireRenewal | null; canCreate: boolean; canUpdate: boolean }) {
-  const { showError } = useToast();
-  const [renewal, setRenewal] = useState<EmbeddedFireRenewal | null>(initial);
-  const [busy,    setBusy]    = useState(false);
-  const [anchor,  setAnchor]  = useState<HTMLElement | null>(null);
-
-  const startTracking = async () => {
-    setBusy(true);
-    try {
-      const c = await fireRenewalsApi.create({ fireInsuranceId: fireId, status: 'CONTACTED' });
-      setRenewal({ id: c.id, status: c.status, notes: c.notes, renewedDate: c.renewedDate, createdAt: c.createdAt, updatedAt: c.updatedAt });
-    } catch (err) { showError(parseApiError(err)); }
-    finally { setBusy(false); }
-  };
-
-  const changeStatus = async (s: FireRenewalStatus) => {
-    if (!renewal || s === renewal.status) { setAnchor(null); return; }
-    const prev = renewal;
-    setRenewal((r) => r ? { ...r, status: s } : r);
-    setAnchor(null);
-    try {
-      const u = await fireRenewalsApi.update(renewal.id, { status: s });
-      setRenewal({ id: u.id, status: u.status, notes: u.notes, renewedDate: u.renewedDate, createdAt: u.createdAt, updatedAt: u.updatedAt });
-    } catch (err) { setRenewal(prev); showError(parseApiError(err)); }
-  };
-
-  if (!renewal) {
-    if (!canCreate) return <Typography variant="caption" color="text.disabled">—</Typography>;
-    return (
-      <Button size="small" variant="outlined"
-        startIcon={busy ? <CircularProgress size={11} /> : <AddIcon sx={{ fontSize: 14 }} />}
-        disabled={busy} onClick={startTracking}
-        sx={{ fontSize: '0.7rem', py: 0.35, px: 1, borderColor: 'divider', color: 'text.secondary', whiteSpace: 'nowrap' }}>
-        Start
-      </Button>
-    );
-  }
-
-  const cfg = RENEWAL_STATUS[renewal.status];
-  return (
-    <>
-      <Box onClick={(e) => canUpdate && setAnchor(e.currentTarget)}
-        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, px: 1.25, py: 0.4, borderRadius: 5,
-          bgcolor: cfg.bg, border: `1px solid ${cfg.color}30`, color: cfg.color,
-          fontSize: '0.7rem', fontWeight: 700, cursor: canUpdate ? 'pointer' : 'default', userSelect: 'none', whiteSpace: 'nowrap',
-          transition: 'filter 0.15s', '&:hover': canUpdate ? { filter: 'brightness(0.95)' } : {} }}>
-        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: cfg.color, flexShrink: 0 }} />
-        {cfg.label}
-        {canUpdate && <ExpandMoreIcon sx={{ fontSize: 13, ml: 0.25, opacity: 0.7 }} />}
-      </Box>
-      <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}
-        slotProps={{ paper: { sx: { borderRadius: 2, boxShadow: 4, minWidth: 180 } } }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}>
-        <Typography variant="caption" sx={{ px: 2, pt: 1, pb: 0.5, display: 'block', color: 'text.disabled', fontWeight: 600, letterSpacing: 0.5 }}>
-          CHANGE STATUS
-        </Typography>
-        {ALL_STATUSES.map(([val, c]) => (
-          <MenuItem key={val} selected={val === renewal.status} onClick={() => changeStatus(val)} sx={{ py: 0.75 }}>
-            <ListItemIcon sx={{ minWidth: 28 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: c.color }} />
-            </ListItemIcon>
-            <Typography variant="body2" sx={{ fontWeight: val === renewal.status ? 700 : 400 }}>{c.label}</Typography>
-            {val === renewal.status && <CheckIcon sx={{ fontSize: 14, ml: 'auto', color: c.color }} />}
-          </MenuItem>
-        ))}
-      </Menu>
-    </>
-  );
-}
+import WhatsAppSendDialog, { WaLang } from '../notifications/WhatsAppSendDialog';
+import type { FireInsuranceRecord } from '../../types/fire-insurance.types';
+import EditableRemarksCell from '../ui/EditableRemarksCell';
 
 // ─── Document cell ────────────────────────────────────────────────────────────
 
@@ -171,15 +85,6 @@ function FireDocCell({ record }: { record: FireInsuranceRecord }) {
   );
 }
 
-// ─── Status chip ─────────────────────────────────────────────────────────────
-
-function StatusChip({ status }: { status: FirePolicyStatus }) {
-  return (
-    <Chip label={FIRE_STATUS_LABELS[status]} size="small" variant="outlined"
-      sx={{ borderColor: FIRE_STATUS_COLORS[status], color: FIRE_STATUS_COLORS[status], borderWidth: 1.5, fontWeight: 600, fontSize: '0.72rem' }} />
-  );
-}
-
 function fmtAmount(v: string | number | null) {
   if (v === null || v === undefined) return '—';
   const n = typeof v === 'string' ? parseFloat(v) : v;
@@ -207,14 +112,57 @@ function expiryChip(dateStr: string) {
 
 // ─── Main table ───────────────────────────────────────────────────────────────
 
-const HEADERS = ['Policy No.', 'Insured Name', 'Company', 'Mobile', 'Business Type', 'Sum Insured', 'Total Premium', 'Expiry Date', 'Renewal Date', 'Status', 'Document', 'Tracking', 'Actions'];
+const HEADERS = ['Policy No.', 'Insured Name', 'Company', 'Mobile', 'Business Type', 'Sum Insured', 'Total Premium', 'Expiry Date', 'Renewal Date', 'Document', 'Remarks', 'Actions'];
 
 interface Props { records: FireInsuranceRecord[]; loading: boolean; onDelete: (id: number) => void }
 
 export default function FireInsuranceTable({ records, loading, onDelete }: Props) {
   const canUpdate = useCan('fire-insurance', 'update');
   const canDelete = useCan('fire-insurance', 'delete');
-  const canCreate = useCan('fire-insurance', 'create');
+
+  const [waTarget, setWaTarget] = useState<FireInsuranceRecord | null>(null);
+  const [contactSettings, setContactSettings] = useState({ name: '', phone: '', address: '' });
+
+  useEffect(() => {
+    notificationsApi.getSettings().then((s) => {
+      setContactSettings({ name: s.contactName ?? '', phone: s.contactPhone ?? '', address: s.contactAddress ?? '' });
+    }).catch(() => {});
+  }, []);
+
+  const buildFooter = () => {
+    const lines = [
+      contactSettings.phone ? `📞 ${contactSettings.phone}` : '',
+      contactSettings.address ? `📍 ${contactSettings.address}` : '',
+      contactSettings.name || 'A2 Insurance Care',
+    ].filter(Boolean);
+    return `\n\n${lines.join('\n')}`;
+  };
+
+  const buildWaMessage = (r: FireInsuranceRecord, lang: WaLang) => {
+    const exp = dayjs(r.renewalDate).format('DD MMM YYYY');
+    const diff = dayjs(r.renewalDate).diff(dayjs(), 'day');
+    const isTamil = lang === 'tamil';
+    const footer = buildFooter();
+
+    if (diff < 0) {
+      return isTamil
+        ? `அன்புள்ள ${r.insuredName},\n\n⚠️ உங்கள் தீ காப்பீடு (*${r.policyNumber}*) ${exp} அன்று *காலாவதியாகிவிட்டது*.\n\nதாமதிக்காமல் புதுப்பிக்கவும்.${footer}`
+        : `Dear ${r.insuredName},\n\n⚠️ Your fire insurance policy (*${r.policyNumber}*) has *EXPIRED* on ${exp}.\n\nPlease renew immediately to avoid a coverage gap.${footer}`;
+    }
+    if (diff <= 7) {
+      return isTamil
+        ? `அன்புள்ள ${r.insuredName},\n\n🚨 *அவசரம்!* உங்கள் தீ காப்பீடு (*${r.policyNumber}*) வெறும் *${diff} நாட்களில்* (${exp}) புதுப்பிக்க வேண்டும்.\n\nதாமதிக்காமல் இப்போதே தொடர்பு கொள்ளவும்.${footer}`
+        : `Dear ${r.insuredName},\n\n🚨 *URGENT!* Your fire insurance policy (*${r.policyNumber}*) renewal is due in just *${diff} days* (${exp}).\n\nPlease contact us immediately.${footer}`;
+    }
+    if (diff <= 15) {
+      return isTamil
+        ? `அன்புள்ள ${r.insuredName},\n\n🔔 நினைவூட்டல்: உங்கள் தீ காப்பீடு (*${r.policyNumber}*) *${diff} நாட்களில்* (${exp}) புதுப்பிக்க வேண்டும்.\n\nசீக்கிரமே புதுப்பிக்கவும்.${footer}`
+        : `Dear ${r.insuredName},\n\n🔔 Reminder: Your fire insurance policy (*${r.policyNumber}*) renewal is due in *${diff} days* (${exp}).\n\nPlease renew soon.${footer}`;
+    }
+    return isTamil
+      ? `அன்புள்ள ${r.insuredName},\n\n📋 முன்னறிவிப்பு: உங்கள் தீ காப்பீடு (*${r.policyNumber}*) *${diff} நாட்களில்* (${exp}) புதுப்பிக்க வேண்டும்.\n\nசமயத்தில் புதுப்பிக்க திட்டமிடவும்.${footer}`
+      : `Dear ${r.insuredName},\n\n📋 Advance Notice: Your fire insurance policy (*${r.policyNumber}*) renewal is due in *${diff} days* (${exp}).\n\nPlease plan for renewal in advance.${footer}`;
+  };
 
   if (loading) return (
     <TableContainer>
@@ -232,6 +180,7 @@ export default function FireInsuranceTable({ records, loading, onDelete }: Props
   );
 
   return (
+    <>
     <TableContainer sx={{ overflowX: 'auto' }}>
       <Table size="small">
         <TableHead>
@@ -272,10 +221,13 @@ export default function FireInsuranceTable({ records, loading, onDelete }: Props
                     )}
                   </Box>
                 </TableCell>
-                <TableCell><StatusChip status={r.policyStatus} /></TableCell>
                 <TableCell><FireDocCell record={r} /></TableCell>
-                <TableCell sx={{ py: 1 }}>
-                  <FireRenewalCell fireId={r.id} initial={r.renewals?.[0] ?? null} canCreate={canCreate} canUpdate={canUpdate} />
+                <TableCell>
+                  <EditableRemarksCell
+                    value={r.remarks}
+                    canEdit={canUpdate}
+                    onSave={(value) => fireInsuranceApi.update(r.id, { remarks: value })}
+                  />
                 </TableCell>
                 <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                   <Tooltip title="View">
@@ -286,6 +238,9 @@ export default function FireInsuranceTable({ records, loading, onDelete }: Props
                       <IconButton size="small" component={NextLink} href={`/fire-records/${r.id}/edit`}><EditIcon fontSize="small" /></IconButton>
                     </Tooltip>
                   )}
+                  <Tooltip title="Send WhatsApp">
+                    <IconButton size="small" color="success" onClick={() => setWaTarget(r)}><WhatsAppIcon fontSize="small" /></IconButton>
+                  </Tooltip>
                   {canDelete && (
                     <Tooltip title="Delete">
                       <IconButton size="small" color="error" onClick={() => onDelete(r.id)}><DeleteIcon fontSize="small" /></IconButton>
@@ -298,5 +253,15 @@ export default function FireInsuranceTable({ records, loading, onDelete }: Props
         </TableBody>
       </Table>
     </TableContainer>
+
+    <WhatsAppSendDialog<FireInsuranceRecord>
+      target={waTarget}
+      onClose={() => setWaTarget(null)}
+      titleLabel={(t) => `${t.insuredName} — ${t.policyNumber}`}
+      getPhone={(t) => t.mobileNumber}
+      buildMessage={buildWaMessage}
+      sendPayloadKey="fireInsuranceId"
+    />
+    </>
   );
 }

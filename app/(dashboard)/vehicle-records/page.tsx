@@ -51,7 +51,6 @@ function VehicleRecordsContent() {
   const searchParams = useSearchParams();
   const selectedLocationId = useLocationFilterStore((s) => s.selectedLocationId);
   const canCreate = useCan('vehicle-records', 'create');
-  const canExport = useCan('vehicle-records', 'export');
   const [all,        setAll]        = useState<VehicleRecord[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [deleteId,   setDeleteId]   = useState<number | null>(null);
@@ -190,12 +189,10 @@ function VehicleRecordsContent() {
               <ToggleButton value="table"><Tooltip title="Table"><TableRowsIcon fontSize="small" /></Tooltip></ToggleButton>
               <ToggleButton value="calendar"><Tooltip title="Calendar"><CalendarMonthIcon fontSize="small" /></Tooltip></ToggleButton>
             </ToggleButtonGroup>
-            {canExport && (
-              <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-                onClick={(e) => setExportAnchor(e.currentTarget)}>
-                Export
-              </Button>
-            )}
+            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+              onClick={(e) => setExportAnchor(e.currentTarget)}>
+              Export
+            </Button>
             {canCreate && (
               <Button variant="contained" size="small" startIcon={<AddIcon />}
                 component={NextLink} href="/vehicle-records/add" disableElevation>
@@ -296,12 +293,10 @@ function VehicleRecordsContent() {
             <ToggleButton value="calendar"><Tooltip title="Calendar"><CalendarMonthIcon fontSize="small" /></Tooltip></ToggleButton>
           </ToggleButtonGroup>
           <Box sx={{ flex: 1 }} />
-          {canExport && (
-            <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
-              onClick={(e) => setExportAnchor(e.currentTarget)}>
-              Export
-            </Button>
-          )}
+          <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
+            onClick={(e) => setExportAnchor(e.currentTarget)}>
+            Export
+          </Button>
         </Box>
       </Box>
 
