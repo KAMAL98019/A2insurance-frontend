@@ -18,6 +18,7 @@ import NextLink        from 'next/link';
 import dayjs from 'dayjs';
 import { fireInsuranceApi }   from '../../lib/api/fire-insurance';
 import { notificationsApi }   from '../../lib/api/notifications';
+import { MSG_PREFIX }         from '../../lib/whatsapp';
 import { useCan }             from '../../hooks/useCan';
 import WhatsAppSendDialog, { WaLang } from '../notifications/WhatsAppSendDialog';
 import type { FireInsuranceRecord } from '../../types/fire-insurance.types';
@@ -259,7 +260,7 @@ export default function FireInsuranceTable({ records, loading, onDelete }: Props
       onClose={() => setWaTarget(null)}
       titleLabel={(t) => `${t.insuredName} — ${t.policyNumber}`}
       getPhone={(t) => t.mobileNumber}
-      buildMessage={buildWaMessage}
+      buildMessage={(t, lang) => MSG_PREFIX + buildWaMessage(t, lang)}
       sendPayloadKey="fireInsuranceId"
     />
     </>

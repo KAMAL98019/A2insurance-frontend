@@ -19,6 +19,7 @@ import NextLink from 'next/link';
 import dayjs from 'dayjs';
 import { labourInsuranceApi } from '../../lib/api/labour-insurance';
 import { notificationsApi } from '../../lib/api/notifications';
+import { MSG_PREFIX } from '../../lib/whatsapp';
 import { useCan } from '../../hooks/useCan';
 import WhatsAppSendDialog, { WaLang } from '../notifications/WhatsAppSendDialog';
 import type { LabourInsuranceRecord } from '../../types/labour-insurance.types';
@@ -280,7 +281,7 @@ export default function LabourInsuranceTable({ records, loading, onDelete }: Pro
         onClose={() => setWaTarget(null)}
         titleLabel={(t) => `${t.insuredName} — ${t.policyNumber}`}
         getPhone={(t) => t.mobileNumber}
-        buildMessage={buildWaMessage}
+        buildMessage={(t, lang) => MSG_PREFIX + buildWaMessage(t, lang)}
         sendPayloadKey="labourInsuranceId"
       />
     </>

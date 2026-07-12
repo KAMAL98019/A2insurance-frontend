@@ -14,6 +14,7 @@ import NextLink from 'next/link';
 import dayjs from 'dayjs';
 import { vehicleRecordsApi } from '../../lib/api/vehicle-records';
 import { notificationsApi } from '../../lib/api/notifications';
+import { MSG_PREFIX } from '../../lib/whatsapp';
 import { useToast } from '../../providers/ToastProvider';
 import { parseApiError } from '../../lib/parse-error';
 import { useCan } from '../../hooks/useCan';
@@ -130,7 +131,7 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
   const openWhatsApp = (r: VehicleRecord) => {
     setWaTarget(r);
     setWaLang('english');
-    setWaMessage(buildMessage(r, 'english', contactSettings));
+    setWaMessage(MSG_PREFIX + buildMessage(r, 'english', contactSettings));
     if (r.cellNumberAlt) {
       setWaStep('pick');
       setWaPhone('');
@@ -147,7 +148,7 @@ export default function VehicleRecordTable({ records, loading, onDelete }: Props
 
   const switchLang = (lang: 'english' | 'tamil') => {
     setWaLang(lang);
-    if (waTarget) setWaMessage(buildMessage(waTarget, lang, contactSettings));
+    if (waTarget) setWaMessage(MSG_PREFIX + buildMessage(waTarget, lang, contactSettings));
   };
 
   const handleWaSend = async () => {

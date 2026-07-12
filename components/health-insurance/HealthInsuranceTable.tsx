@@ -13,6 +13,7 @@ import NextLink        from 'next/link';
 import dayjs from 'dayjs';
 import { healthInsuranceApi }    from '../../lib/api/health-insurance';
 import { notificationsApi }      from '../../lib/api/notifications';
+import { MSG_PREFIX }            from '../../lib/whatsapp';
 import { useCan }                from '../../hooks/useCan';
 import WhatsAppSendDialog, { WaLang } from '../notifications/WhatsAppSendDialog';
 import type { HealthInsuranceRecord } from '../../types/health-insurance.types';
@@ -254,7 +255,7 @@ export default function HealthInsuranceTable({ records, loading, onDelete }: Pro
       onClose={() => setWaTarget(null)}
       titleLabel={(t) => `${t.policyHolderName} — ${t.policyNumber}`}
       getPhone={(t) => t.mobileNumber}
-      buildMessage={buildWaMessage}
+      buildMessage={(t, lang) => MSG_PREFIX + buildWaMessage(t, lang)}
       sendPayloadKey="healthInsuranceId"
     />
     </>
