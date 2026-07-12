@@ -18,6 +18,8 @@ import { uploadDocument } from '../../lib/api/upload';
 import { parseApiError }  from '../../lib/parse-error';
 import { useToast }       from '../../providers/ToastProvider';
 import { useLeadSources } from '../../hooks/useLeadSources';
+import { useInsuranceCompanies } from '../../hooks/useInsuranceCompanies';
+import SearchableSelect from '../ui/SearchableSelect';
 import LoadingButton      from '../ui/LoadingButton';
 import type { FireInsuranceRecord } from '../../types/fire-insurance.types';
 
@@ -61,6 +63,7 @@ interface Props {
 export default function FireInsuranceForm({ defaultValues, existing, onSubmit, submitLabel = 'Save' }: Props) {
   const { showError } = useToast();
   const { sources: leadSources } = useLeadSources();
+  const { companies: insuranceCompanies } = useInsuranceCompanies();
   const pendingFileRef  = useRef<File | null>(null);
   const objectUrlsRef   = useRef<string[]>([]);
   const isSubmittingRef = useRef(false);
@@ -173,7 +176,7 @@ export default function FireInsuranceForm({ defaultValues, existing, onSubmit, s
 
       {/* ── 1. Insured Details ────────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Insured / Business Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Insured / Business Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Insured Name *" error={!!errors.insuredName}
@@ -212,23 +215,30 @@ export default function FireInsuranceForm({ defaultValues, existing, onSubmit, s
 
       {/* ── 2. Policy Details ────────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Policy Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Policy Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Policy Number *" error={!!errors.policyNumber}
               helperText={errors.policyNumber?.message} {...register('policyNumber')} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <TextField fullWidth label="Insurance Company *" error={!!errors.insuranceCompanyName}
-              helperText={errors.insuranceCompanyName?.message} {...register('insuranceCompanyName')} />
+            <Controller name="insuranceCompanyName" control={control}
+              render={({ field }) => (
+                <SearchableSelect
+                  label="Insurance Company *" value={field.value} onChange={field.onChange}
+                  error={!!errors.insuranceCompanyName} helperText={errors.insuranceCompanyName?.message}
+                  options={insuranceCompanies.map((c) => ({ value: c.name, label: c.name }))}
+                />
+              )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="policyStatus" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Policy Status" error={!!errors.policyStatus}
-                  helperText={errors.policyStatus?.message} {...field}>
-                  {POLICY_STATUSES.map((s) => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Policy Status" value={field.value} onChange={field.onChange}
+                  error={!!errors.policyStatus} helperText={errors.policyStatus?.message}
+                  options={POLICY_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -254,7 +264,7 @@ export default function FireInsuranceForm({ defaultValues, existing, onSubmit, s
 
       {/* ── 3. Premium Breakdown ─────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Premium Breakdown</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Premium Breakdown</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Sum Insured (₹) *" type="number"
@@ -297,7 +307,7 @@ export default function FireInsuranceForm({ defaultValues, existing, onSubmit, s
 
       {/* ── 4. Receipt & Agent Details ───────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Receipt &amp; Agent Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Receipt &amp; Agent Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Receipt Number"
@@ -323,21 +333,21 @@ export default function FireInsuranceForm({ defaultValues, existing, onSubmit, s
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="customerType" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Customer Type" error={!!errors.customerType}
-                  helperText={errors.customerType?.message} {...field}>
-                  {CUSTOMER_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Customer Type" value={field.value} onChange={field.onChange}
+                  error={!!errors.customerType} helperText={errors.customerType?.message}
+                  options={CUSTOMER_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="leadSource" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Lead Source"
+                <SearchableSelect
+                  label="Lead Source" value={field.value ?? ''} onChange={field.onChange}
                   error={!!errors.leadSource} helperText={errors.leadSource?.message}
-                  {...field} value={field.value ?? ''}>
-                  <MenuItem value="">Select Lead Source</MenuItem>
-                  {leadSources.map((s) => <MenuItem key={s.id} value={s.name}>{s.name}</MenuItem>)}
-                </TextField>
+                  options={leadSources.map((s) => ({ value: s.name, label: s.name }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -350,7 +360,7 @@ export default function FireInsuranceForm({ defaultValues, existing, onSubmit, s
 
       {/* ── 5. Document Upload ───────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Document Upload</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Document Upload</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 4 }}>
             <Box sx={{

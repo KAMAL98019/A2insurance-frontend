@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Box, Grid, TextField, MenuItem, Button, Typography,
+  Box, Grid, TextField, Button, Typography,
   Divider, CircularProgress, Paper, Alert, LinearProgress,
   Chip, IconButton,
 } from '@mui/material';
@@ -20,7 +20,9 @@ import { uploadDocument, UploadType } from '../../lib/api/upload';
 import { parseApiError } from '../../lib/parse-error';
 import { useToast } from '../../providers/ToastProvider';
 import { useLeadSources } from '../../hooks/useLeadSources';
+import { useInsuranceCompanies } from '../../hooks/useInsuranceCompanies';
 import LoadingButton from '../ui/LoadingButton';
+import SearchableSelect from '../ui/SearchableSelect';
 import type { HealthInsuranceRecord } from '../../types/health-insurance.types';
 
 const POLICY_TYPES = [
@@ -101,6 +103,7 @@ interface Props {
 export default function HealthInsuranceForm({ defaultValues, existing, onSubmit, submitLabel = 'Save' }: Props) {
   const { showError } = useToast();
   const { sources: leadSources } = useLeadSources();
+  const { companies: insuranceCompanies } = useInsuranceCompanies();
   const pendingFilesRef = useRef<Partial<Record<DocField['key'], File>>>({});
   const objectUrlsRef   = useRef<string[]>([]);
   const isSubmittingRef = useRef(false);
@@ -326,7 +329,7 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 1. Policy Holder Details ─────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Policy Holder Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Policy Holder Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Policy Holder Name *" error={!!errors.policyHolderName}
@@ -349,10 +352,11 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="gender" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Gender" error={!!errors.gender} helperText={errors.gender?.message} {...field}>
-                  <MenuItem value="">Select Gender</MenuItem>
-                  {GENDERS.map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Gender" value={field.value} onChange={field.onChange}
+                  error={!!errors.gender} helperText={errors.gender?.message}
+                  options={GENDERS.map((g) => ({ value: g, label: g }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -365,32 +369,40 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 2. Policy Details ────────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Policy Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Policy Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Policy Number *" error={!!errors.policyNumber}
               helperText={errors.policyNumber?.message} {...register('policyNumber')} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <TextField fullWidth label="Insurance Company *" error={!!errors.insuranceCompanyName}
-              helperText={errors.insuranceCompanyName?.message} {...register('insuranceCompanyName')} />
+            <Controller name="insuranceCompanyName" control={control}
+              render={({ field }) => (
+                <SearchableSelect
+                  label="Insurance Company *" value={field.value} onChange={field.onChange}
+                  error={!!errors.insuranceCompanyName} helperText={errors.insuranceCompanyName?.message}
+                  options={insuranceCompanies.map((c) => ({ value: c.name, label: c.name }))}
+                />
+              )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="policyType" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Policy Type *" error={!!errors.policyType}
-                  helperText={errors.policyType?.message} {...field}>
-                  {POLICY_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Policy Type *" value={field.value} onChange={field.onChange}
+                  error={!!errors.policyType} helperText={errors.policyType?.message}
+                  options={POLICY_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="policyStatus" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Policy Status" error={!!errors.policyStatus}
-                  helperText={errors.policyStatus?.message} {...field}>
-                  {POLICY_STATUSES.map((s) => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Policy Status" value={field.value} onChange={field.onChange}
+                  error={!!errors.policyStatus} helperText={errors.policyStatus?.message}
+                  options={POLICY_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -416,7 +428,7 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 3. Coverage & Payment ────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Coverage &amp; Payment</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Coverage &amp; Payment</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField fullWidth label="Sum Insured (₹) *" type="number"
@@ -433,31 +445,31 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Controller name="paymentMode" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Payment Mode" error={!!errors.paymentMode}
-                  helperText={errors.paymentMode?.message} {...field} value={field.value ?? ''}>
-                  <MenuItem value="">Select Mode</MenuItem>
-                  {PAYMENT_MODES.map((m) => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Payment Mode" value={field.value ?? ''} onChange={field.onChange}
+                  error={!!errors.paymentMode} helperText={errors.paymentMode?.message}
+                  options={PAYMENT_MODES.map((m) => ({ value: m.value, label: m.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Controller name="customerType" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Customer Type" error={!!errors.customerType}
-                  helperText={errors.customerType?.message} {...field}>
-                  {CUSTOMER_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Customer Type" value={field.value} onChange={field.onChange}
+                  error={!!errors.customerType} helperText={errors.customerType?.message}
+                  options={CUSTOMER_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="leadSource" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Lead Source"
+                <SearchableSelect
+                  label="Lead Source" value={field.value ?? ''} onChange={field.onChange}
                   error={!!errors.leadSource} helperText={errors.leadSource?.message}
-                  {...field} value={field.value ?? ''}>
-                  <MenuItem value="">Select Lead Source</MenuItem>
-                  {leadSources.map((s) => <MenuItem key={s.id} value={s.name}>{s.name}</MenuItem>)}
-                </TextField>
+                  options={leadSources.map((s) => ({ value: s.name, label: s.name }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -475,7 +487,7 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 4. Nominee Details ───────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Nominee Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nominee Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 4 }}>
             <TextField fullWidth label="Nominee Name"
@@ -499,7 +511,7 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
       {isFamilyFloater && (
         <Paper sx={{ p: 3, mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Family Members</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Family Members</Typography>
             <Button size="small" variant="outlined" startIcon={<AddIcon />}
               onClick={() => appendMember({ memberName: '', relationship: '', dateOfBirth: '', gender: '', medicalHistory: '', preExistingDisease: '' })}>
               Add Member
@@ -530,11 +542,12 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Controller name={`familyMembers.${index}.relationship`} control={control}
                     render={({ field: f }) => (
-                      <TextField fullWidth select label="Relationship *"
+                      <SearchableSelect
+                        label="Relationship *" value={f.value} onChange={f.onChange}
                         error={!!errors.familyMembers?.[index]?.relationship}
-                        helperText={errors.familyMembers?.[index]?.relationship?.message} {...f}>
-                        {RELATIONSHIPS.map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-                      </TextField>
+                        helperText={errors.familyMembers?.[index]?.relationship?.message}
+                        options={RELATIONSHIPS.map((r) => ({ value: r, label: r }))}
+                      />
                     )} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -545,10 +558,10 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Controller name={`familyMembers.${index}.gender`} control={control}
                     render={({ field: f }) => (
-                      <TextField fullWidth select label="Gender" {...f} value={f.value ?? ''}>
-                        <MenuItem value="">Select</MenuItem>
-                        {GENDERS.map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
-                      </TextField>
+                      <SearchableSelect
+                        label="Gender" value={f.value ?? ''} onChange={f.onChange}
+                        options={GENDERS.map((g) => ({ value: g, label: g }))}
+                      />
                     )} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -567,7 +580,7 @@ export default function HealthInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 6. Document Upload ───────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Document Upload</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Document Upload</Typography>
         <Grid container spacing={2} sx={{ alignItems: 'stretch' }}>
           {DOC_FIELDS.map(renderDocCard)}
         </Grid>

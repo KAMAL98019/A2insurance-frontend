@@ -185,7 +185,7 @@ function VehicleRecordsContent() {
           </Box>
 
           {/* Desktop-only: view toggle + export + add */}
-          <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, alignItems: 'center' }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
             <ToggleButtonGroup value={viewMode} exclusive size="small" onChange={(_, v) => v && setViewMode(v)}>
               <ToggleButton value="table"><Tooltip title="Table"><TableRowsIcon fontSize="small" /></Tooltip></ToggleButton>
               <ToggleButton value="calendar"><Tooltip title="Calendar"><CalendarMonthIcon fontSize="small" /></Tooltip></ToggleButton>
@@ -258,7 +258,7 @@ function VehicleRecordsContent() {
                 <Button
                   variant="contained" size="small" disableElevation
                   component={NextLink} href="/vehicle-records/add"
-                  sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}
+                  sx={{ display: { xs: 'flex', md: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}
                 >
                   <AddIcon fontSize="small" />
                 </Button>
@@ -290,7 +290,7 @@ function VehicleRecordsContent() {
         )}
 
         {/* Mobile-only: secondary action bar */}
-        <Box sx={{ display: { xs: 'flex', sm: 'none' }, gap: 1, alignItems: 'center' }}>
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1, alignItems: 'center' }}>
           <ToggleButtonGroup value={viewMode} exclusive size="small" onChange={(_, v) => v && setViewMode(v)}>
             <ToggleButton value="table"><Tooltip title="Table"><TableRowsIcon fontSize="small" /></Tooltip></ToggleButton>
             <ToggleButton value="calendar"><Tooltip title="Calendar"><CalendarMonthIcon fontSize="small" /></Tooltip></ToggleButton>

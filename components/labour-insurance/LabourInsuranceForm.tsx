@@ -4,37 +4,39 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Box, Grid, TextField, MenuItem, Button, Typography,
+  Box, Grid, TextField, Button, Typography,
   Divider, CircularProgress, Paper, LinearProgress,
   Chip,
 } from '@mui/material';
-import UploadFileIcon  from '@mui/icons-material/UploadFile';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ArticleIcon     from '@mui/icons-material/Article';
-import OpenInNewIcon   from '@mui/icons-material/OpenInNew';
+import ArticleIcon from '@mui/icons-material/Article';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import { labourInsuranceSchema, LabourInsuranceFormValues } from '../../lib/validations/labour-insurance.schema';
 import { uploadDocument } from '../../lib/api/upload';
-import { parseApiError }  from '../../lib/parse-error';
-import { useToast }       from '../../providers/ToastProvider';
+import { parseApiError } from '../../lib/parse-error';
+import { useToast } from '../../providers/ToastProvider';
 import { useLeadSources } from '../../hooks/useLeadSources';
-import LoadingButton      from '../ui/LoadingButton';
+import { useInsuranceCompanies } from '../../hooks/useInsuranceCompanies';
+import LoadingButton from '../ui/LoadingButton';
+import SearchableSelect from '../ui/SearchableSelect';
 import type { LabourInsuranceRecord } from '../../types/labour-insurance.types';
 
 const POLICY_STATUSES = [
-  { value: 'ACTIVE',          label: 'Active' },
-  { value: 'EXPIRED',         label: 'Expired' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'EXPIRED', label: 'Expired' },
   { value: 'PENDING_RENEWAL', label: 'Pending Renewal' },
-  { value: 'CANCELLED',       label: 'Cancelled' },
+  { value: 'CANCELLED', label: 'Cancelled' },
 ] as const;
 
 const POLICY_TYPES = [
   { value: 'UNNAMED', label: 'Unnamed (Group)' },
-  { value: 'NAMED',   label: 'Named' },
+  { value: 'NAMED', label: 'Named' },
 ] as const;
 
 const CUSTOMER_TYPES = [
-  { value: 'NEW',     label: 'New' },
+  { value: 'NEW', label: 'New' },
   { value: 'RENEWAL', label: 'Renewal' },
 ] as const;
 
@@ -69,14 +71,15 @@ interface Props {
 export default function LabourInsuranceForm({ defaultValues, existing, onSubmit, submitLabel = 'Save' }: Props) {
   const { showError } = useToast();
   const { sources: leadSources } = useLeadSources();
-  const pendingFileRef  = useRef<File | null>(null);
-  const objectUrlsRef   = useRef<string[]>([]);
+  const { companies: insuranceCompanies } = useInsuranceCompanies();
+  const pendingFileRef = useRef<File | null>(null);
+  const objectUrlsRef = useRef<string[]>([]);
   const isSubmittingRef = useRef(false);
 
-  const [pendingLabel,   setPendingLabel]   = useState('');
+  const [pendingLabel, setPendingLabel] = useState('');
   const [pendingPreview, setPendingPreview] = useState('');
-  const [submitting,     setSubmitting]     = useState(false);
-  const [uploading,      setUploading]      = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     return () => { objectUrlsRef.current.forEach((u) => URL.revokeObjectURL(u)); };
@@ -85,34 +88,34 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
   const getInitialValues = (): LabourInsuranceFormValues => {
     if (existing) {
       return {
-        policyNumber:         existing.policyNumber,
+        policyNumber: existing.policyNumber,
         insuranceCompanyName: existing.insuranceCompanyName,
-        insuredName:          existing.insuredName,
-        mobileNumber:         existing.mobileNumber,
-        email:                existing.email ?? '',
-        address:              existing.address ?? '',
-        businessDescription:  existing.businessDescription ?? '',
-        gstNumber:            existing.gstNumber ?? '',
-        intermediaryCode:     existing.intermediaryCode ?? '',
-        intermediaryName:     existing.intermediaryName ?? '',
-        policyStartDate:      existing.policyStartDate?.slice(0, 10) ?? '',
-        policyEndDate:        existing.policyEndDate?.slice(0, 10) ?? '',
-        renewalDate:          existing.renewalDate?.slice(0, 10) ?? '',
-        policyStatus:         existing.policyStatus,
-        labourPolicyType:     existing.labourPolicyType,
-        numberOfEmployees:    existing.numberOfEmployees ?? 0,
-        wagesPerEmployee:     existing.wagesPerEmployee != null ? parseFloat(existing.wagesPerEmployee as string) : 0,
-        totalDeclaredWages:   existing.totalDeclaredWages != null ? parseFloat(existing.totalDeclaredWages as string) : 0,
-        premium:              existing.premium != null ? parseFloat(existing.premium as string) : 0,
-        cgst:                 existing.cgst != null ? parseFloat(existing.cgst as string) : 0,
-        sgst:                 existing.sgst != null ? parseFloat(existing.sgst as string) : 0,
-        totalPremium:         parseFloat(existing.totalPremium) || 0,
-        receiptNumber:        existing.receiptNumber ?? '',
-        receiptDate:          existing.receiptDate?.slice(0, 10) ?? '',
-        customerType:         existing.customerType,
-        leadSource:           existing.leadSource ?? '',
-        remarks:              existing.remarks ?? '',
-        policyDocument:       existing.policyDocument ?? '',
+        insuredName: existing.insuredName,
+        mobileNumber: existing.mobileNumber,
+        email: existing.email ?? '',
+        address: existing.address ?? '',
+        businessDescription: existing.businessDescription ?? '',
+        gstNumber: existing.gstNumber ?? '',
+        intermediaryCode: existing.intermediaryCode ?? '',
+        intermediaryName: existing.intermediaryName ?? '',
+        policyStartDate: existing.policyStartDate?.slice(0, 10) ?? '',
+        policyEndDate: existing.policyEndDate?.slice(0, 10) ?? '',
+        renewalDate: existing.renewalDate?.slice(0, 10) ?? '',
+        policyStatus: existing.policyStatus,
+        labourPolicyType: existing.labourPolicyType,
+        numberOfEmployees: existing.numberOfEmployees ?? 0,
+        wagesPerEmployee: existing.wagesPerEmployee != null ? parseFloat(existing.wagesPerEmployee as string) : 0,
+        totalDeclaredWages: existing.totalDeclaredWages != null ? parseFloat(existing.totalDeclaredWages as string) : 0,
+        premium: existing.premium != null ? parseFloat(existing.premium as string) : 0,
+        cgst: existing.cgst != null ? parseFloat(existing.cgst as string) : 0,
+        sgst: existing.sgst != null ? parseFloat(existing.sgst as string) : 0,
+        totalPremium: parseFloat(existing.totalPremium) || 0,
+        receiptNumber: existing.receiptNumber ?? '',
+        receiptDate: existing.receiptDate?.slice(0, 10) ?? '',
+        customerType: existing.customerType,
+        leadSource: existing.leadSource ?? '',
+        remarks: existing.remarks ?? '',
+        policyDocument: existing.policyDocument ?? '',
       };
     }
     return { ...EMPTY, ...defaultValues };
@@ -168,11 +171,11 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
     finally { isSubmittingRef.current = false; setSubmitting(false); }
   };
 
-  const uploadedUrl  = watch('policyDocument');
-  const previewSrc   = pendingPreview || (uploadedUrl || undefined);
-  const isPdf        = pendingPreview ? pendingLabel.toLowerCase().includes('.pdf') : isPdfUrl(uploadedUrl);
+  const uploadedUrl = watch('policyDocument');
+  const previewSrc = pendingPreview || (uploadedUrl || undefined);
+  const isPdf = pendingPreview ? pendingLabel.toLowerCase().includes('.pdf') : isPdfUrl(uploadedUrl);
   const hasSomething = !!pendingLabel || !!uploadedUrl;
-  const hasPending   = !!pendingFileRef.current;
+  const hasPending = !!pendingFileRef.current;
 
   return (
     <Box component="form" onSubmit={handleSubmit(onFormSubmit)} noValidate>
@@ -180,7 +183,7 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 1. Company / Insured Details ─────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Company / Insured Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Company / Insured Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Company / Insured Name *" error={!!errors.insuredName}
@@ -207,10 +210,11 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="customerType" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Customer Type" error={!!errors.customerType}
-                  helperText={errors.customerType?.message} {...field}>
-                  {CUSTOMER_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Customer Type" value={field.value} onChange={field.onChange}
+                  error={!!errors.customerType} helperText={errors.customerType?.message}
+                  options={CUSTOMER_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -223,33 +227,40 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 2. Policy Details ────────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Policy Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Policy Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Policy Number *" error={!!errors.policyNumber}
               helperText={errors.policyNumber?.message} {...register('policyNumber')} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <TextField fullWidth label="Insurance Company *" error={!!errors.insuranceCompanyName}
-              helperText={errors.insuranceCompanyName?.message} {...register('insuranceCompanyName')} />
+            <Controller name="insuranceCompanyName" control={control}
+              render={({ field }) => (
+                <SearchableSelect
+                  label="Insurance Company *" value={field.value} onChange={field.onChange}
+                  error={!!errors.insuranceCompanyName} helperText={errors.insuranceCompanyName?.message}
+                  options={insuranceCompanies.map((c) => ({ value: c.name, label: c.name }))}
+                />
+              )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="labourPolicyType" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Labour Policy Type" error={!!errors.labourPolicyType}
-                  helperText={errors.labourPolicyType?.message} {...field} value={field.value ?? ''}>
-                  <MenuItem value="">Select Type</MenuItem>
-                  {POLICY_TYPES.map((t) => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Labour Policy Type" value={field.value ?? ''} onChange={field.onChange}
+                  error={!!errors.labourPolicyType} helperText={errors.labourPolicyType?.message}
+                  options={POLICY_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="policyStatus" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Policy Status" error={!!errors.policyStatus}
-                  helperText={errors.policyStatus?.message} {...field}>
-                  {POLICY_STATUSES.map((s) => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-                </TextField>
+                <SearchableSelect
+                  label="Policy Status" value={field.value} onChange={field.onChange}
+                  error={!!errors.policyStatus} helperText={errors.policyStatus?.message}
+                  options={POLICY_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -285,7 +296,7 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 3. Employee & Wages ──────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Employee &amp; Wages</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Employee &amp; Wages</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <TextField fullWidth label="Number of Employees" type="number"
@@ -310,7 +321,7 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 4. Premium ───────────────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Premium Details</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Premium Details</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField fullWidth label="Premium (₹)" type="number"
@@ -350,12 +361,11 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Controller name="leadSource" control={control}
               render={({ field }) => (
-                <TextField fullWidth select label="Lead Source"
+                <SearchableSelect
+                  label="Lead Source" value={field.value ?? ''} onChange={field.onChange}
                   error={!!errors.leadSource} helperText={errors.leadSource?.message}
-                  {...field} value={field.value ?? ''}>
-                  <MenuItem value="">Select Lead Source</MenuItem>
-                  {leadSources.map((s) => <MenuItem key={s.id} value={s.name}>{s.name}</MenuItem>)}
-                </TextField>
+                  options={leadSources.map((s) => ({ value: s.name, label: s.name }))}
+                />
               )} />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -368,7 +378,7 @@ export default function LabourInsuranceForm({ defaultValues, existing, onSubmit,
 
       {/* ── 5. Document Upload ───────────────────────────────────── */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Document Upload</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Document Upload</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 4 }}>
             <Box sx={{

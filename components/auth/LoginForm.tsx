@@ -73,7 +73,7 @@ export default function LoginForm() {
         type="email"
         autoComplete="email"
         autoFocus
-        placeholder="admin@a2insurance.com"
+        placeholder="you@example.com"
         error={!!errors.email}
         helperText={errors.email?.message}
         slotProps={{ inputLabel: { shrink: true } }}

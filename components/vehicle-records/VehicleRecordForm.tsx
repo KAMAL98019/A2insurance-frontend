@@ -15,7 +15,9 @@ import ArticleIcon      from '@mui/icons-material/Article';
 import OpenInNewIcon    from '@mui/icons-material/OpenInNew';
 import { vehicleRecordSchema, VehicleRecordFormValues } from '../../lib/validations/vehicle-record.schema';
 import { uploadDocument, UploadType } from '../../lib/api/upload';
-import { categoriesApi } from '../../lib/api/categories';
+import { categoriesApi, flattenCategories } from '../../lib/api/categories';
+import { useInsuranceCompanies } from '../../hooks/useInsuranceCompanies';
+import SearchableSelect from '../ui/SearchableSelect';
 import { parseApiError } from '../../lib/parse-error';
 import { useToast }     from '../../providers/ToastProvider';
 import { useFormDraft } from '../../hooks/useFormDraft';
@@ -77,6 +79,7 @@ export default function VehicleRecordForm({
 }: Props) {
   const { showError } = useToast();
   const draft = useFormDraft<VehicleRecordFormValues>(DRAFT_KEY);
+  const { companies: insuranceCompanies } = useInsuranceCompanies();
 
   // Files stored locally before upload (Add mode)
   const pendingFilesRef  = useRef<Partial<Record<DocField['key'], File>>>({});
@@ -89,7 +92,6 @@ export default function VehicleRecordForm({
   const [submitting,      setSubmitting]      = useState(false);
   const [uploadingField,  setUploadingField]  = useState('');
   const [categories,      setCategories]      = useState<VehicleCategory[]>([]);
-  const [parentCatId,     setParentCatId]     = useState<number | ''>('');
   const [draftRestored,   setDraftRestored]   = useState(false);
 
   // Revoke all blob URLs when the component unmounts
@@ -141,21 +143,10 @@ export default function VehicleRecordForm({
   }, [watch, enableDraft, existing, draft]);
 
   useEffect(() => {
-    categoriesApi.getAll().then((cats) => {
-      setCategories(cats);
-      if (existing) {
-        const catName = existing.category;
-        for (const parent of cats) {
-          if (parent.children?.some((c) => c.name === catName)) {
-            setParentCatId(parent.id);
-            return;
-          }
-        }
-        const root = cats.find((c) => c.name === catName);
-        if (root) setParentCatId(root.id);
-      }
-    }).catch(() => {});
+    categoriesApi.getAll().then(setCategories).catch(() => {});
   }, []);
+
+  const flatCategories = flattenCategories(categories);
 
   const clearAllBlobUrls = () => {
     objectUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
@@ -420,11 +411,11 @@ export default function VehicleRecordForm({
 
       {/* Vehicle Information */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Vehicle Information</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Vehicle Information</Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField fullWidth label="Vehicle Number" error={!!errors.vehicleNumber} helperText={errors.vehicleNumber?.message}
-              {...register('vehicleNumber')} />
+              {...register('vehicleNumber', { onChange: (e) => { e.target.value = e.target.value.toUpperCase(); } })} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <TextField fullWidth label="Owner Name" error={!!errors.ownerName} helperText={errors.ownerName?.message}
@@ -444,71 +435,41 @@ export default function VehicleRecordForm({
 
       {/* Policy Information */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Policy Information</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Policy Information</Typography>
         <Grid container spacing={2}>
-          {/* Category Group (parent) */}
-          <Grid size={{ xs: 12, sm: 3 }}>
-            <TextField
-              fullWidth select label="Category Group"
-              value={parentCatId}
-              onChange={(e) => {
-                const pid = e.target.value === '' ? '' : Number(e.target.value);
-                setParentCatId(pid);
-                setValue('category', '');
-                if (pid !== '') {
-                  const parent = categories.find((c) => c.id === pid);
-                  if (parent && (!parent.children || parent.children.length === 0)) {
-                    setValue('category', parent.name);
-                  }
-                }
-              }}
-            >
-              {categories.length === 0 && <MenuItem value="" disabled>Loading…</MenuItem>}
-              <MenuItem value="">Select Group</MenuItem>
-              {categories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-            </TextField>
-          </Grid>
-          {/* Sub-category (child) */}
-          <Grid size={{ xs: 12, sm: 3 }}>
-            {(() => {
-              const parent = parentCatId !== '' ? categories.find((c) => c.id === parentCatId) : null;
-              const children = parent?.children ?? [];
-              return (
-                <Controller name="category" control={control}
-                  render={({ field }) => (
-                    <TextField fullWidth select label="Category"
-                      error={!!errors.category} helperText={errors.category?.message}
-                      {...field} disabled={!parentCatId || children.length === 0}>
-                      {children.length === 0
-                        ? parent
-                          ? <MenuItem value={parent.name}>{parent.name}</MenuItem>
-                          : <MenuItem value="" disabled>Select a group first</MenuItem>
-                        : [
-                          <MenuItem key="" value="">Select Category</MenuItem>,
-                          ...children.map((c) => <MenuItem key={c.id} value={c.name}>{c.name}</MenuItem>),
-                        ]
-                      }
-                    </TextField>
-                  )}
+          {/* Category */}
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Controller name="category" control={control}
+              render={({ field }) => (
+                <SearchableSelect
+                  label="Category" value={field.value} onChange={field.onChange}
+                  error={!!errors.category} helperText={errors.category?.message}
+                  options={flatCategories.map((c) => ({ value: c.name, label: c.name }))}
                 />
-              );
-            })()}
+              )}
+            />
           </Grid>
-          <Grid size={{ xs: 12, sm: 3 }}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField fullWidth label="Policy Expiry Date" type="date" slotProps={{ inputLabel: { shrink: true } }}
               error={!!errors.policyExpiryDate} helperText={errors.policyExpiryDate?.message}
               {...register('policyExpiryDate')} />
           </Grid>
-          <Grid size={{ xs: 12, sm: 3 }}>
-            <TextField fullWidth label="Insurance Company" error={!!errors.insuranceCompany} helperText={errors.insuranceCompany?.message}
-              {...register('insuranceCompany')} />
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Controller name="insuranceCompany" control={control}
+              render={({ field }) => (
+                <SearchableSelect
+                  label="Insurance Company" value={field.value} onChange={field.onChange}
+                  error={!!errors.insuranceCompany} helperText={errors.insuranceCompany?.message}
+                  options={insuranceCompanies.map((c) => ({ value: c.name, label: c.name }))}
+                />
+              )} />
           </Grid>
         </Grid>
       </Paper>
 
       {/* Document Upload */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Document Upload</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Document Upload</Typography>
         <Grid container spacing={2} sx={{ alignItems: 'stretch' }}>
           {DOC_FIELDS.map(renderDocCard)}
         </Grid>

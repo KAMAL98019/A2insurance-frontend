@@ -5,13 +5,13 @@ import TruckBackground from '../../components/auth/TruckBackground';
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* ── Left panel (tablet+) ── */}
+      {/* ── Left panel (desktop only — tablets get the mobile layout) ── */}
       <Box
         sx={{
-          display: { xs: 'none', sm: 'flex' },
+          display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
           justifyContent: 'space-between',
-          width: { sm: '45%', md: '50%' },
+          width: '50%',
           minHeight: '100vh',
           position: 'relative',
           overflow: 'hidden',
@@ -50,24 +50,24 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </Box>
 
       {/* ── Right panel ── */}
-      {/* On sm+: white centered panel (unchanged) */}
+      {/* On desktop: white centered panel (unchanged) */}
       <Box
         sx={{
           flex: 1,
-          display: { xs: 'none', sm: 'flex' },
+          display: { xs: 'none', md: 'flex' },
           alignItems: 'center',
           justifyContent: 'center',
-          p: { sm: 4, md: 6 },
+          p: 6,
           bgcolor: '#fff',
         }}
       >
         <Box sx={{ width: '100%', maxWidth: 420 }}>{children}</Box>
       </Box>
 
-      {/* On xs: full-page mobile layout */}
+      {/* On mobile + tablet: full-page card layout */}
       <Box
         sx={{
-          display: { xs: 'flex', sm: 'none' },
+          display: { xs: 'flex', md: 'none' },
           flex: 1,
           flexDirection: 'column',
           alignItems: 'center',

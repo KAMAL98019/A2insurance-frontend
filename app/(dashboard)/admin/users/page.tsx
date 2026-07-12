@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   Box, Typography, Paper, Button, TextField, IconButton,
   Table, TableHead, TableBody, TableRow, TableCell, TableContainer,
-  Dialog, DialogTitle, DialogContent, DialogActions,
+  Dialog, DialogTitle, DialogContent, DialogActions, InputAdornment,
   Chip, CircularProgress, Tooltip, Grid, Select, MenuItem,
   InputLabel, FormControl, Menu,
 } from '@mui/material';
@@ -13,6 +13,8 @@ import PeopleIcon     from '@mui/icons-material/People';
 import MoreVertIcon   from '@mui/icons-material/MoreVert';
 import KeyIcon        from '@mui/icons-material/Key';
 import TuneIcon       from '@mui/icons-material/Tune';
+import Visibility     from '@mui/icons-material/Visibility';
+import VisibilityOff  from '@mui/icons-material/VisibilityOff';
 import NextLink from 'next/link';
 import ProtectedRoute from '../../../../components/auth/ProtectedRoute';
 import { useCurrentUser } from '../../../../hooks/useCurrentUser';
@@ -45,12 +47,14 @@ function UsersView() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [locationId, setLocationId] = useState<number | ''>('');
 
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [menuTarget, setMenuTarget] = useState<AuthUser | null>(null);
   const [resetTarget, setResetTarget] = useState<AuthUser | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const isMaster = me?.role === 'MASTER_ADMIN';
 
@@ -73,6 +77,7 @@ function UsersView() {
 
   const resetForm = () => {
     setName(''); setEmail(''); setPhone(''); setPassword(''); setLocationId('');
+    setShowPassword(false);
     setFormError('');
   };
 
@@ -236,7 +241,7 @@ function UsersView() {
                         </Tooltip>
                       )}
                       <Tooltip title="Reset password">
-                        <IconButton size="small" onClick={() => { setResetTarget(u); setNewPassword(''); }}>
+                        <IconButton size="small" onClick={() => { setResetTarget(u); setNewPassword(''); setShowNewPassword(false); }}>
                           <KeyIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -269,16 +274,31 @@ function UsersView() {
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
             <Grid size={{ xs: 12 }}>
-              <TextField autoFocus fullWidth size="small" label="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
+              <TextField autoFocus fullWidth size="small" label="Full Name" value={name} onChange={(e) => setName(e.target.value)}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth size="small" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <TextField fullWidth size="small" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth size="small" label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <TextField fullWidth size="small" label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }} />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <TextField fullWidth size="small" label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <TextField fullWidth size="small" label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
+                slotProps={{
+                  htmlInput: { autoComplete: 'new-password' },
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword((p) => !p)} edge="end" size="small">
+                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }} />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <Typography variant="caption" color="text.secondary">
@@ -303,16 +323,31 @@ function UsersView() {
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
             <Grid size={{ xs: 12 }}>
-              <TextField autoFocus fullWidth size="small" label="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
+              <TextField autoFocus fullWidth size="small" label="Full Name" value={name} onChange={(e) => setName(e.target.value)}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth size="small" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <TextField fullWidth size="small" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth size="small" label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <TextField fullWidth size="small" label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)}
+                slotProps={{ htmlInput: { autoComplete: 'off' } }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth size="small" label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <TextField fullWidth size="small" label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
+                slotProps={{
+                  htmlInput: { autoComplete: 'new-password' },
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword((p) => !p)} edge="end" size="small">
+                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
@@ -347,8 +382,20 @@ function UsersView() {
             Set a new password for <strong>{resetTarget?.name}</strong>.
           </Typography>
           <TextField
-            autoFocus fullWidth size="small" label="New Password" type="password"
+            autoFocus fullWidth size="small" label="New Password" type={showNewPassword ? 'text' : 'password'}
             value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+            slotProps={{
+              htmlInput: { autoComplete: 'new-password' },
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowNewPassword((p) => !p)} edge="end" size="small">
+                      {showNewPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
         </DialogContent>
         <DialogActions>

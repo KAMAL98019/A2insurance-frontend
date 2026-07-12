@@ -26,6 +26,7 @@ import BarChartIcon       from '@mui/icons-material/BarChart';
 import TuneIcon           from '@mui/icons-material/Tune';
 import PeopleIcon         from '@mui/icons-material/People';
 import PlaceIcon          from '@mui/icons-material/Place';
+import BusinessIcon       from '@mui/icons-material/Business';
 import { usePathname } from 'next/navigation';
 import NextLink from 'next/link';
 import { useState } from 'react';
@@ -114,8 +115,9 @@ const NAV: NavItem[] = [
     icon: <AdminPanelSettingsIcon />,
     roles: ['MASTER_ADMIN', 'SUPER_ADMIN'],
     children: [
-      { label: 'Manage Categories', href: '/admin/categories',   icon: <CategoryIcon fontSize="small" /> },
-      { label: 'Lead Sources',      href: '/admin/lead-sources', icon: <TuneIcon fontSize="small" /> },
+      { label: 'Manage Categories',    href: '/admin/categories',           icon: <CategoryIcon fontSize="small" /> },
+      { label: 'Lead Sources',         href: '/admin/lead-sources',         icon: <TuneIcon fontSize="small" /> },
+      { label: 'Insurance Companies',  href: '/admin/insurance-companies',  icon: <BusinessIcon fontSize="small" /> },
     ],
   },
   { label: 'Users',     href: '/admin/users',     icon: <PeopleIcon />, roles: ['MASTER_ADMIN', 'SUPER_ADMIN'] },

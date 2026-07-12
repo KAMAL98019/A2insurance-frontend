@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import NextLink from 'next/link';
-import dayjs   from 'dayjs';
+import dayjs from 'dayjs';
 import { vehicleRecordsApi } from '../../../../lib/api/vehicle-records';
 import DocumentCell from '../../../../components/vehicle-records/DocumentCell';
 import type { VehicleRecord } from '../../../../types/vehicle-record.types';
@@ -24,9 +24,9 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function VehicleRecordDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [record,  setRecord]  = useState<VehicleRecord | null>(null);
+  const [record, setRecord] = useState<VehicleRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState('');
+  const [error, setError] = useState('');
   const [expired, setExpired] = useState(false);
 
   useEffect(() => {
@@ -62,9 +62,9 @@ export default function VehicleRecordDetailPage() {
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>Vehicle Information</Typography>
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12, sm: 4 }}><Field label="Vehicle Number"   value={record.vehicleNumber} /></Grid>
-          <Grid size={{ xs: 12, sm: 4 }}><Field label="Owner Name"       value={record.ownerName} /></Grid>
-          <Grid size={{ xs: 12, sm: 4 }}><Field label="Primary Number"   value={record.cellNumber} /></Grid>
+          <Grid size={{ xs: 12, sm: 4 }}><Field label="Vehicle Number" value={record.vehicleNumber} /></Grid>
+          <Grid size={{ xs: 12, sm: 4 }}><Field label="Owner Name" value={record.ownerName} /></Grid>
+          <Grid size={{ xs: 12, sm: 4 }}><Field label="Primary Number" value={record.cellNumber} /></Grid>
           {record.cellNumberAlt && (
             <Grid size={{ xs: 12, sm: 4 }}><Field label="Secondary Number" value={record.cellNumberAlt} /></Grid>
           )}

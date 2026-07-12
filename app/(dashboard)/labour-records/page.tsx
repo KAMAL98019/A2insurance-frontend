@@ -103,7 +103,7 @@ function LabourRecordsContent() {
               )}
             </Box>
           </Box>
-          <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
             {canExport && (
               <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />}
                 onClick={(e) => setExportAnchor(e.currentTarget)}>
@@ -164,7 +164,7 @@ function LabourRecordsContent() {
             {canCreate && (
               <Button variant="contained" size="small" disableElevation
                 component={NextLink} href="/labour-records/add"
-                sx={{ display: { xs: 'flex', sm: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
+                sx={{ display: { xs: 'flex', md: 'none' }, flexShrink: 0, minWidth: 0, px: 1.5 }}>
                 <AddIcon fontSize="small" />
               </Button>
             )}

@@ -39,7 +39,7 @@ interface Props { records: VehicleRecord[] }
 
 export default function VehicleCalendarView({ records }: Props) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   // All date state starts null on server — set after client mount to avoid hydration mismatch
   const [now, setNow] = useState<Dayjs | null>(null);
   const [month, setMonth] = useState<Dayjs | null>(null);

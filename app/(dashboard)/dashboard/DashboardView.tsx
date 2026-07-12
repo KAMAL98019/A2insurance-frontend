@@ -136,7 +136,7 @@ function AlertRow({ alert }: { alert: ExpiryAlert }) {
         <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.3 }}>{alert.vehicleNumber}</Typography>
         <Typography variant="caption" color="text.secondary" noWrap>{alert.ownerName} · {alert.cellNumber}</Typography>
       </Box>
-      <Chip label={alert.category} size="small" sx={{ fontSize: '0.65rem', height: 20, display: { xs: 'none', sm: 'flex' } }} />
+      <Chip label={alert.category} size="small" sx={{ fontSize: '0.65rem', height: 20, display: { xs: 'none', md: 'flex' } }} />
       <Chip label={d === 0 ? 'Today!' : d === 1 ? 'Tomorrow' : `${d} days`} size="small"
         color={urgent ? 'error' : warn ? 'warning' : 'default'} variant={urgent ? 'filled' : 'outlined'}
         sx={{ fontSize: '0.68rem', fontWeight: 700, minWidth: 72, height: 22 }} />
