@@ -13,7 +13,6 @@ import {
   Chip,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useState } from 'react';
 import { useAuthStore } from '../../store/auth.store';
@@ -91,10 +90,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>{user?.email}</Typography>
           </Box>
           <Divider />
-          <MenuItem onClick={() => setAnchor(null)} sx={{ gap: 1.5, py: 1.5 }}>
-            <PersonIcon fontSize="small" />
-            <Typography variant="body2">My Profile</Typography>
-          </MenuItem>
           <MenuItem
             onClick={() => { setAnchor(null); logout(); }}
             sx={{ gap: 1.5, py: 1.5, color: 'error.main' }}
