@@ -7,12 +7,9 @@ import {
 } from '@mui/material';
 import DirectionsCarIcon       from '@mui/icons-material/DirectionsCar';
 import WarningAmberIcon        from '@mui/icons-material/WarningAmber';
-import EventBusyIcon           from '@mui/icons-material/EventBusy';
 import AutorenewIcon           from '@mui/icons-material/Autorenew';
-import TrackChangesIcon        from '@mui/icons-material/TrackChanges';
 import HourglassTopIcon        from '@mui/icons-material/HourglassTop';
 import CheckCircleIcon         from '@mui/icons-material/CheckCircle';
-import CancelIcon              from '@mui/icons-material/Cancel';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import PieChartIcon            from '@mui/icons-material/PieChart';
 import AddCircleOutlineIcon    from '@mui/icons-material/AddCircleOutlined';
@@ -49,14 +46,6 @@ function KpiCard({ label, value, icon, accent, href, sub, loading, pulse }: KpiC
           </Typography>
         )}
         <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>{label}</Typography>
-      </Box>
-      <Divider />
-      <Box sx={{ px: 2.5, py: 1 }}>
-        <Button component={NextLink} href={href} size="small"
-          endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
-          sx={{ p: 0, fontSize: '0.75rem', color: accent, '&:hover': { bgcolor: 'transparent', opacity: 0.8 } }}>
-          View details
-        </Button>
       </Box>
     </Paper>
   );
@@ -329,17 +318,6 @@ export default function DashboardView() {
             component={NextLink} href="/fire-records/add">Add Fire</Button>
           <Button variant="outlined" size="small" startIcon={<EngineeringIcon />} color="success"
             component={NextLink} href="/labour-records/add">Add Labour</Button>
-          <Button variant="outlined" size="small" startIcon={<TrackChangesIcon />}
-            component={NextLink} href="/vehicle-records">Track Renewals</Button>
-          <Button variant="outlined" size="small" color="warning" startIcon={<WarningAmberIcon />}
-            component={NextLink} href="/vehicle-records/expiring">Expiring</Button>
-          <Button variant="outlined" size="small" color="error" startIcon={<EventBusyIcon />}
-            component={NextLink} href="/vehicle-records/expired">Expired</Button>
-          <Button variant="outlined" size="small" startIcon={<AutorenewIcon />}
-            component={NextLink} href="/vehicle-records/renewal-history">History</Button>
-          <Button variant="outlined" size="small" startIcon={<CancelIcon />}
-            sx={{ color: 'text.secondary', borderColor: 'divider' }}
-            component={NextLink} href="/analytics/vehicle">Analytics</Button>
         </Box>
       </Paper>
     </Box>
